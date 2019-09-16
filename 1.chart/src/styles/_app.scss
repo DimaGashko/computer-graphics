@@ -1,0 +1,12 @@
+.app {
+    position: relative;
+    height: 100vh;
+}
+
+.app__canvas {
+    position: absolute;    
+    left: 0;
+    top: 0;
+    
+    background: rgba(255,255,0,.3);
+}
