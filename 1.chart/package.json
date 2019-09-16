@@ -1,0 +1,18 @@
+{
+   "author": "DimaGashko <dgashko@mail.ua>",
+   "license": "MIT",
+   "private": true,
+   "sideEffects": false,
+   "scripts": {
+      "start": "parcel src/index.pug",
+      "build": "parcel build src/index.pug"
+   },
+   "dependencies": {
+      "dat.gui": "^0.7.6"
+   },
+   "devDependencies": {
+      "normalize.scss": "^0.1.0",
+      "pug": "^2.0.4",
+      "typescript": "^3.6.3"
+   }
+}
