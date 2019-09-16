@@ -1,6 +1,8 @@
 import { throttle } from 'throttle-debounce';
 import Vector from '../scripts/Vector';
 
+import Hammer from 'hammerjs';
+
 interface IAppElements {
     canvas?: HTMLCanvasElement,
     [type: string]: HTMLElement
@@ -18,7 +20,7 @@ export default class App {
 
     private size = new Vector(0, 0);
     private coords = new Vector(0, 0);
-    private zoom = new Vector(150, 150);
+    private zoom = new Vector(10, 10);
 
     private pointsInterval = 1;
 
@@ -32,6 +34,47 @@ export default class App {
         this.resize();
 
         this.start();
+    }
+
+    private initEvents() {
+        const hammer = new Hammer(this.$.canvas);
+        hammer.get('pinch').set({ enable: true });
+
+        let startCoords;
+
+        hammer.on('pan panstart', ({ deltaX, deltaY, type }) => {
+            if (type === 'panstart') {
+                startCoords = this.coords.copy();
+            }
+
+            const delta = new Vector(-deltaX, deltaY).div(this.zoom);
+            this.coords = startCoords.copy().add(delta);
+        });
+
+        window.addEventListener('mousewheel', (e: MouseWheelEvent) => {
+            this.zoom.y += e.deltaY / 5; 
+
+            if (e.shiftKey) {
+                this.zoom.x += e.deltaX / 5;
+            } else {
+                this.zoom.x += e.deltaY / 5;
+            }
+        })
+
+        hammer.on('pinch', (e) => { 
+            console.log(e);
+        })
+
+        window.addEventListener('resize', throttle(100, () => {
+            this.resize();
+        }));
+    }
+
+    public setZoom(zoom) { 
+        zoom = Math.max(zoom, 1e-10);
+        zoom = Math.min(zoom, 1e10);
+
+        this.zoom = new Vector(zoom, zoom);
     }
 
     start() {
@@ -54,7 +97,7 @@ export default class App {
         this.renderFunc();
     }
 
-    private renderFunc() { 
+    private renderFunc() {
         const ctx = this.ctx;
         ctx.save();
 
@@ -63,7 +106,7 @@ export default class App {
 
         ctx.beginPath();
 
-        this.getPoints().forEach((point, i) => { 
+        this.getPoints().forEach((point, i) => {
             const type = (i === 0) ? 'moveTo' : 'lineTo';
             ctx[type](point.x, point.y);
         });
@@ -111,12 +154,6 @@ export default class App {
     private yToWorld(y: number) { return this.toWorld(new Vector(0, y)).y; }
     private xToView(x: number) { return this.toView(new Vector(x, 0)).x; }
     private yToView(y: number) { return this.toView(new Vector(0, y)).y; }
-
-    private initEvents() {
-        window.addEventListener('resize', throttle(100, () => {
-            this.resize();
-        }));
-    }
 
     private resize() {
         this.updateMetrics();
