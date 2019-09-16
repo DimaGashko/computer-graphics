@@ -5,6 +5,10 @@ interface IAppElements {
     [type: string]: HTMLElement
 }
 
+interface IFunc { 
+    (x: number): number
+}
+
 export default class App {
     private ctx: CanvasRenderingContext2D = null;
 
@@ -17,7 +21,7 @@ export default class App {
     private width = 0;
     private height = 0;
 
-    constructor(private root: HTMLElement) {
+    constructor(private root: HTMLElement, private func: IFunc) {
         this.init();
         this.initEvents();
     }
