@@ -18,7 +18,7 @@ export default class App {
 
     private size = new Vector(0, 0);
     private coords = new Vector(0, 0);
-    private zoom = new Vector(50, 25);
+    private zoom = new Vector(150, 150);
 
     private pointsInterval = 1;
 
@@ -88,8 +88,11 @@ export default class App {
      * @param coords viport coordinates
      */
     private toWorld(coords: Vector) {
-        const offset = this.size.copy().div(new Vector(2, 2));
-        return coords.copy().sub(offset).div(this.zoom).add(this.coords);
+        return coords.copy()
+            .sub(this.size.copy().div(new Vector(2, 2)))
+            .mul(new Vector(1, -1))
+            .div(this.zoom)
+            .add(this.coords);
     }
 
     /**
@@ -97,8 +100,11 @@ export default class App {
      * @param coords world coordinates
      */
     private toView(coords: Vector) {
-        const offset = this.size.copy().div(new Vector(2, 2));
-        return coords.copy().sub(this.coords).mul(this.zoom).add(offset);
+        return coords.copy()
+            .sub(this.coords)
+            .mul(this.zoom)
+            .mul(new Vector(1, -1))
+            .add(this.size.copy().div(new Vector(2, 2)));
     }
 
     private xToWorld(x: number) { return this.toWorld(new Vector(x, 0)).x; }
