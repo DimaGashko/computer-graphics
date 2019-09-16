@@ -1,14 +1,7 @@
 import 'normalize.scss/normalize.scss';
 import './index.scss';
+import App from './app';
 
-class Test {
-    constructor(private name = 'Test 1') { 
+const root: HTMLElement = document.querySelector('.app');
 
-    }
-
-    testBro() { 
-        console.log(`Bro, it's ${this.name}`);
-    }
-}
-
-new Test('Test 1').testBro();
+new App(root);

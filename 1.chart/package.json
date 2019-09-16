@@ -8,9 +8,11 @@
       "build": "parcel build src/index.pug"
    },
    "dependencies": {
-      "dat.gui": "^0.7.6"
+      "dat.gui": "^0.7.6",
+      "throttle-debounce": "^2.1.0"
    },
    "devDependencies": {
+      "@types/throttle-debounce": "^2.1.0",
       "cssnano": "^4.1.10",
       "normalize.scss": "^0.1.0",
       "pug": "^2.0.4",

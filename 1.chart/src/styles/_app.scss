@@ -1,12 +1,13 @@
 .app {
     position: relative;
     height: 100vh;
+
+    max-width: 100vw;
+    overflow: hidden;
 }
 
 .app__canvas {
     position: absolute;    
     left: 0;
     top: 0;
-    
-    background: rgba(255,255,0,.3);
 }
