@@ -5,11 +5,12 @@
    "sideEffects": false,
    "scripts": {
       "start": "parcel src/index.pug",
-      "build": "parcel build src/index.pug"
+      "build": "parcel build src/index.pug --public-url ."
    },
    "dependencies": {
       "@types/mathjs": "^6.0.2",
       "dat.gui": "^0.7.6",
+      "expr-eval": "^2.0.2",
       "hammerjs": "^2.0.8",
       "mathjs": "^6.2.1",
       "throttle-debounce": "^2.1.0"

@@ -52,20 +52,17 @@ export default class App {
         });
 
         this.$.canvas.addEventListener('mousewheel', (e: MouseWheelEvent) => {
-            this._zoom.y += e.deltaY / 50;
+            const zoom = this._zoom.copy();
+
+            zoom.y += e.deltaY / 50;
 
             if (e.shiftKey) {
-                this._zoom.x += e.deltaX / 50;
+                zoom.x += e.deltaX / 50;
             } else {
-                this._zoom.x += e.deltaY / 50;
+                zoom.x += e.deltaY / 50;
             }
 
-            this.zoomX = this._zoom.x;
-            this.zoomY = this._zoom.y;
-        }, );
-
-        hammer.on('pinch', (e) => {
-            console.log(e);
+            this.setZoom(zoom);
         });
 
         window.addEventListener('resize', throttle(100, () => {
@@ -74,10 +71,10 @@ export default class App {
     }
 
     public setZoom(zoom) {
-        zoom = Math.max(zoom, 1e-10);
-        zoom = Math.min(zoom, 1e10);
+        zoom.x = Math.min(Math.max(zoom.x, 1e-10), 1e10);
+        zoom.y = Math.min(Math.max(zoom.y, 1e-10), 1e10);
 
-        this._zoom = new Vector(zoom, zoom);
+        this._zoom = zoom;
     }
 
     start() {
@@ -97,11 +94,7 @@ export default class App {
     }
 
     private tik() {
-        try {
-            this.renderFunc();
-        } catch {
-            console.log('err');
-        }
+        this.renderFunc();
     }
 
     private renderFunc() {
@@ -186,13 +179,7 @@ export default class App {
         this.ctx = this.$.canvas.getContext('2d');
     }
 
-    public get zoomX() { return this._zoom.x; }
-    public set zoomX(value) { this._zoom.x = value; }
-
-    public get zoomY() { return this._zoom.y; }
-    public set zoomY(value) { this._zoom.y = value; }
-
-    public setFunc(func: IFunc) { 
+    public setFunc(func: IFunc) {
         this.func = func;
     }
 }
