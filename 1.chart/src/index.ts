@@ -3,6 +3,7 @@ import './index.scss';
 
 import * as dat from 'dat.gui';
 import App from './app/app';
+import Vector from './scripts/Vector';
 
 const tmp = {
     func: '(0.1 + 0.3 * x * x * x) / (5 + Math.sqrt(0.15 + x * x * x * x))',

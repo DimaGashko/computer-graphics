@@ -106,7 +106,16 @@ export default class App {
 
         ctx.beginPath();
 
-        this.getPoints().forEach((point, i) => {
+        this.getPoints().forEach((point, i, points) => {
+            if (i != 0) { 
+                const prev = points[i - 1];
+
+                if (Math.abs(point.y - prev.y) > this._pointsInterval * 5) {
+                    ctx.stroke();
+                    ctx.beginPath();
+                }
+            }
+
             const type = (i === 0) ? 'moveTo' : 'lineTo';
             ctx[type](point.x, point.y);
         });
@@ -181,5 +190,9 @@ export default class App {
 
     public setFunc(func: IFunc) {
         this.func = func;
+    }
+
+    set coords(coords: Vector) { 
+        this._coords = coords.copy();
     }
 }
