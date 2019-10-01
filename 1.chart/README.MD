@@ -1,8 +1,8 @@
 # The Chart
 
-![The Chart Example](./src/assets/chart.png)
-
 Check it out: http://js-coder.tk/computer-graphics/chart/
+
+![The Chart Example](./src/assets/chart.png)
 
 ## Features
 
