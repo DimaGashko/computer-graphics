@@ -1,3 +1,8 @@
 # Computer Graphics
 
-1. [The Chart](./1.chart)
+## The Chart
+
+- Source: [./chart](./chart)
+- Check it out: http://js-coder.tk/computer-graphics/chart/
+
+![The Chart Example](./chart/src/assets/chart.png)
