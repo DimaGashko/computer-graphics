@@ -12,6 +12,7 @@ Check it out: http://js-coder.tk/computer-graphics/chart/
 - Change expression
 - You can use time variable in the expression (t)
 - Responsive (only the pinch zoom doesn't support on mobile)
+- Discontinuous Functions support (particle)
 
 ## Limitation
 
