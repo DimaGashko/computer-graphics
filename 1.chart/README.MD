@@ -11,6 +11,7 @@ Check it out: http://js-coder.tk/computer-graphics/chart/
   - also you can change zoom by specific axis (when shift key is pressed)
 - Change expression
 - You can use time variable in the expression (t)
+- Responsive (only the pinch zoom doesn't support on mobile)
 
 ## Lang & techs
 
