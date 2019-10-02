@@ -1,0 +1,23 @@
+{
+   "author": "DimaGashko <dgashko@mail.ua>",
+   "license": "MIT",
+   "private": true,
+   "sideEffects": false,
+   "scripts": {
+      "start": "parcel src/index.pug",
+      "build": "parcel build src/index.pug --public-url ."
+   },
+   "dependencies": {
+      "dat.gui": "^0.7.6",
+      "throttle-debounce": "^2.1.0"
+   },
+   "devDependencies": {
+      "@types/dat.gui": "^0.7.4",
+      "@types/throttle-debounce": "^2.1.0",
+      "cssnano": "^4.1.10",
+      "normalize.scss": "^0.1.0",
+      "pug": "^2.0.4",
+      "sass": "^1.22.12",
+      "typescript": "^3.6.3"
+   }
+}
