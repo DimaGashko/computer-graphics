@@ -5,14 +5,13 @@ import { throttle } from 'throttle-debounce';
 import Hammer from 'hammerjs';
 import * as dat from 'dat.gui';
 
-import font from './font';
-
-console.log(font);
+import _font from './font';
 
 type Line = [number, number, number, number];
 type Char = Line[];
 
 interface Font { 
+    size: number,
     chars: { 
         symbol: string,
         lines: Char,
@@ -32,8 +31,8 @@ const gui = new dat.GUI();
 
 const pressedKeys: { [keycode: string]: boolean } = {}
 
+const font: Font = _font;
 const charMap = font2CharMap(font);
-console.log(charMap);
 
 const KEYS = {
     left: 37,
@@ -44,9 +43,10 @@ const KEYS = {
 
 const options = {
     color: '#c00',
-    pixelSize: 10,
+    pixelSize: 3,
     text: 'Hello, World',
-    toCenter: () => {
+    letterSpacing: 1,
+    resetCoords: () => {
         coords.x = initialCoords.x;
         coords.y = initialCoords.y;
     }
@@ -54,7 +54,7 @@ const options = {
 
 let initialCoords = {
     x: 50,
-    y: 200,
+    y: window.innerHeight / 3,
 }
 
 let coords = {
@@ -65,7 +65,7 @@ let coords = {
 let width = 0;
 let height = 0;
 
-const unknown: Char = [
+const unknownSymbol: Char = [
     [2, 0, 13, 0],
     [2, 0, 2, 15],
     [13, 0, 13, 15],
@@ -129,9 +129,19 @@ function initEvents() {
     }));
 }
 
-function drawText(text) {
-    text.split()
-    drawCharacter(unknown);
+function drawText(text: string) {
+    text.split('').forEach((realChar) => { 
+        const char = (charMap.has(realChar))
+            ? charMap.get(realChar) : unknownSymbol;
+        
+        drawCharacter(char);
+        drawLetterSpace();
+    });
+}
+
+function drawLetterSpace() { 
+    const realSize = font.size * options.pixelSize;
+    ctx.translate((realSize * options.letterSpacing) ^ 0, 0)
 }
 
 function drawCharacter(char: Char) { 
@@ -219,19 +229,17 @@ function clearCanvas() {
 function font2CharMap(font: Font) { 
     const map: Map<string, Char> = new Map();
 
-    font.chars.forEach((cahrConfig) => { 
-        map.set(cahrConfig.symbol, cahrConfig.lines);
+    font.chars.forEach((charConfig) => { 
+        map.set(charConfig.symbol, charConfig.lines);
     });
 
     return map;
 }
 
 function initGui() {
-    const winW = window.innerWidth / 1.5;
-    const winH = window.innerHeight / 1.5;
-
     gui.addColor(options, 'color');
-    gui.add(options, 'pixelSize', 1, 25, 1);
     gui.add(options, 'text');
-    gui.add(options, 'toCenter');
+    gui.add(options, 'pixelSize', 1, 25, 1);
+    gui.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
+    gui.add(options, 'resetCoords');
 }
