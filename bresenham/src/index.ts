@@ -10,10 +10,11 @@ const $: {
     [type: string]: HTMLElement
 } = {};
 
-const options = {
-    color: '#c00',
-    pixelSize: 10,
-}
+$.root = document.querySelector('.app');
+$.canvas = $.root.querySelector('.app__canvas');
+
+const ctx = $.canvas.getContext('2d');
+const gui = new dat.GUI();
 
 const pressedKeys: { [keycode: string]: boolean } = {}
 
@@ -24,15 +25,23 @@ const KEYS = {
     bottom: 40,
 }
 
-$.root = document.querySelector('.app');
-$.canvas = $.root.querySelector('.app__canvas');
+const options = {
+    color: '#c00',
+    pixelSize: 10,
+    toCenter: () => { 
+        coords.x = initialCoords.x;
+        coords.y = initialCoords.y;
+    }
+}
 
-const ctx = $.canvas.getContext('2d');
-const gui = new dat.GUI();
-
-let coords = {
+let initialCoords = {
     x: 50,
     y: 200,
+}
+
+let coords = {
+    x: initialCoords.x,
+    y: initialCoords.y,
 }
 
 let width = 0;
@@ -177,4 +186,5 @@ function initGui() {
 
     gui.addColor(options, 'color');
     gui.add(options, 'pixelSize', 1, 25, 1);
+    gui.add(options, 'toCenter');
 }
