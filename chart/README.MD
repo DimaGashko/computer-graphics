@@ -12,10 +12,11 @@ Check it out: http://js-coder.tk/computer-graphics/chart/
 - Change expression
 - You can use time variable in the expression (t)
 - Responsive (only the pinch zoom doesn't support on mobile)
+- Discontinuous Functions support (particle)
 
 ## Limitation
 
-- The Chart use a really simple parser for func field, so you can write any valid Javascript in that field (p.s. yep, hi xss, there is only one resone for that - I don't want use somthing like math.js, because it's big and slow with parsel)
+- The Chart use a really simple parser for func field, so you can write any valid Javascript in that field (p.s. yep, hi xss, there is only one resone for that: I don't want to use somthing like math.js, because it's big and slow with parsel)
 
 ## Lang & techs
 
