@@ -10,12 +10,12 @@ import _font from './font';
 type Line = [number, number, number, number];
 type Char = Line[];
 
-interface Font { 
+interface Font {
     size: number,
-    chars: { 
+    chars: {
         symbol: string,
         lines: Char,
-    } [];
+    }[];
 }
 
 const $: {
@@ -45,7 +45,7 @@ const options = {
     color: '#c00',
     text: 'Hello, World',
     letterSpacing: 1,
-    
+    zoom: 1,
     resetCoords: () => {
         coords.x = initialCoords.x;
         coords.y = initialCoords.y;
@@ -130,20 +130,20 @@ function initEvents() {
 }
 
 function drawText(text: string) {
-    text.split('').forEach((realChar) => { 
+    text.split('').forEach((realChar) => {
         const char = (charMap.has(realChar))
             ? charMap.get(realChar) : unknownSymbol;
-        
+
         drawCharacter(char);
         drawLetterSpace();
     });
 }
 
-function drawLetterSpace() { 
-    ctx.translate((font.size * options.letterSpacing) ^ 0, 0)
+function drawLetterSpace() {
+    ctx.translate((font.size * options.letterSpacing * options.zoom) ^ 0, 0)
 }
 
-function drawCharacter(char: Char) { 
+function drawCharacter(char: Char) {
     char.forEach((l) => {
         drawLine(l[0], l[1], l[2], l[3]);
     });
@@ -185,7 +185,10 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
 }
 
 function drawPixel(x, y) {
-    ctx.fillRect(x, y, 1, 1);
+    const z = options.zoom;
+
+    // Use Math round just for zoom option
+    ctx.fillRect(x * z, y * z, z, z);
 }
 
 function useKeys() {
@@ -224,10 +227,10 @@ function clearCanvas() {
     ctx.clearRect(0, 0, width, height);
 }
 
-function font2CharMap(font: Font) { 
+function font2CharMap(font: Font) {
     const map: Map<string, Char> = new Map();
 
-    font.chars.forEach((charConfig) => { 
+    font.chars.forEach((charConfig) => {
         map.set(charConfig.symbol, charConfig.lines);
     });
 
@@ -237,7 +240,7 @@ function font2CharMap(font: Font) {
 function initGui() {
     gui.addColor(options, 'color');
     gui.add(options, 'text');
-    
+    gui.add(options, 'zoom', 0.1, 10, 0.1)
     gui.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
     gui.add(options, 'resetCoords');
 }
