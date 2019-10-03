@@ -2,14 +2,14 @@
 
 ## The Chart
 
-- Source: [./chart](./chart)
+- Source: [chart](./chart)
 - Demo: http://js-coder.tk/computer-graphics/chart/
 
 ![The Chart Example](./chart/src/assets/chart.png)
 
 ## Bresenham's line Algorithm
 
-- Source: [./bresenham](./bresenham)
+- Source: [bresenham](./bresenham)
 - Demo: http://js-coder.tk/computer-graphics/bresenham/
 
-![The Bresenham Example](.bresenham/src/assets/bresenham.png)
+![The Bresenham Example](./bresenham/src/assets/bresenham.png)
