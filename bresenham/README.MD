@@ -1,24 +1,34 @@
-# The Chart
+# Bresenham's line Algorithm
 
-Check it out: http://js-coder.tk/computer-graphics/chart/
+Check it out: http://js-coder.tk/computer-graphics/bresenham/
 
-![The Chart Example](./src/assets/chart.png)
+![The Bresenham Example](./src/assets/bresenham.png)
+
+In this Bresenham's line Algorithm demo you can write you own text and we draw it by the algorithm (unfortunately only 3 characters in our font now, but you can send a pull request, just edit the [font](./src/font.json))
 
 ## Features
 
+- Zoom
+- Available Symbols: A, D, 5
+- Default symbol for unknown
+- Change letter spacing
+- Change color of chars
 - Drag & drop
-- Zoom (by mouse)
-  - also you can change zoom by specific axis (when shift key is pressed)
-- Change expression
-- You can use time variable in the expression (t)
-- Responsive (only the pinch zoom doesn't support on mobile)
-
-## Limitation
-
-- The Chart use a really simple parser for func field, so you can write any valid Javascript in that field (p.s. yep, hi xss, there is only one resone for that - I don't want use somthing like math.js, because it's big and slow with parsel)
+- Mobile supports
 
 ## Lang & techs
 
 - TypeScript, Pug, Scss
 - Canvas 2d
 - Parsel
+
+## Font
+
+In this demo font is just array of lines
+
+```js
+[
+  [x1, y1, x2, y2],
+  . . .
+]
+```
