@@ -1,6 +1,6 @@
 # Bresenham's line Algorithm
 
-Check it out: http://js-coder.tk/computer-graphics/bresenham/
+Check it out: https://js-coder.tk/computer-graphics/bresenham/
 
 ![The Bresenham Example](./src/assets/bresenham.png)
 
