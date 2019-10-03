@@ -3,6 +3,13 @@
 ## The Chart
 
 - Source: [./chart](./chart)
-- Check it out: http://js-coder.tk/computer-graphics/chart/
+- Demo: http://js-coder.tk/computer-graphics/chart/
 
 ![The Chart Example](./chart/src/assets/chart.png)
+
+## Bresenham's line Algorithm
+
+- Source: [./bresenham](./bresenham)
+- Demo: http://js-coder.tk/computer-graphics/bresenham/
+
+![The Bresenham Example](.bresenham/src/assets/bresenham.png)
