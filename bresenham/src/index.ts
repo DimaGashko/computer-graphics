@@ -43,9 +43,9 @@ const KEYS = {
 
 const options = {
     color: '#c00',
-    pixelSize: 3,
     text: 'Hello, World',
     letterSpacing: 1,
+    
     resetCoords: () => {
         coords.x = initialCoords.x;
         coords.y = initialCoords.y;
@@ -140,8 +140,7 @@ function drawText(text: string) {
 }
 
 function drawLetterSpace() { 
-    const realSize = font.size * options.pixelSize;
-    ctx.translate((realSize * options.letterSpacing) ^ 0, 0)
+    ctx.translate((font.size * options.letterSpacing) ^ 0, 0)
 }
 
 function drawCharacter(char: Char) { 
@@ -186,8 +185,7 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
 }
 
 function drawPixel(x, y) {
-    const size = options.pixelSize;
-    ctx.fillRect(x * size, y * size, size, size);
+    ctx.fillRect(x, y, 1, 1);
 }
 
 function useKeys() {
@@ -239,7 +237,7 @@ function font2CharMap(font: Font) {
 function initGui() {
     gui.addColor(options, 'color');
     gui.add(options, 'text');
-    gui.add(options, 'pixelSize', 1, 25, 1);
+    
     gui.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
     gui.add(options, 'resetCoords');
 }
