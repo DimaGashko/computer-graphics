@@ -43,9 +43,9 @@ const KEYS = {
 
 const options = {
     color: '#c00',
-    text: 'Hello, World',
+    text: 'A',
     letterSpacing: 1,
-    zoom: 1,
+    zoom: 6,
     resetCoords: () => {
         coords.x = initialCoords.x;
         coords.y = initialCoords.y;
@@ -243,21 +243,17 @@ function font2CharMap(font: Font) {
 }
 
 function setZoom(zoom) { 
-    options.zoom = Math.min(Math.max(zoom, 0.1), 10);
+    options.zoom = Math.min(Math.max(zoom, 0.4), 10);
 }
 
 function getZoom() {
-    if (options.zoom >= 1) {
-        return Math.round(options.zoom);
-    }
-
     return options.zoom;
 }
 
 function initGui() {
     gui.addColor(options, 'color');
     gui.add(options, 'text');
-    gui.add(options, 'zoom', 0.1, 10, 0.1)
+    gui.add(options, 'zoom', 0.4, 10, 0.1)
     gui.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
     gui.add(options, 'resetCoords');
 }
