@@ -15,7 +15,8 @@ interface Font {
     chars: {
         symbol: string,
         lines: Char,
-    }[];
+    }[],
+    unknown: Char,
 }
 
 const $: {
@@ -43,9 +44,9 @@ const KEYS = {
 
 const options = {
     color: '#c00',
-    text: 'A',
-    letterSpacing: 1,
-    zoom: 6,
+    text: 'AD5',
+    letterSpacing: 0.8,
+    zoom: 3,
     resetCoords: () => {
         coords.x = initialCoords.x;
         coords.y = initialCoords.y;
@@ -64,13 +65,6 @@ let coords = {
 
 let width = 0;
 let height = 0;
-
-const unknownSymbol: Char = [
-    [2, 0, 13, 0],
-    [2, 0, 2, 15],
-    [13, 0, 13, 15],
-    [2, 15, 14, 15],
-];
 
 resize();
 start();
@@ -93,7 +87,7 @@ function drawFrame() {
     updateCoords();
     useKeys();
 
-    drawText(options.text);
+    drawText(options.text.toUpperCase());
 
     ctx.restore();
 }
@@ -117,7 +111,7 @@ function initEvents() {
     });
 
     $.canvas.addEventListener('mousewheel', (e: MouseWheelEvent) => {
-        const delta = e.deltaY / 200;
+        const delta = -e.deltaY / 200;
         setZoom(options.zoom + delta);
     });
 
@@ -132,12 +126,16 @@ function initEvents() {
     window.addEventListener('resize', throttle(100, () => {
         resize();
     }));
+
+    window.addEventListener('load', () => {
+        resize();
+    });
 }
 
 function drawText(text: string) {
     text.split('').forEach((realChar) => {
         const char = (charMap.has(realChar))
-            ? charMap.get(realChar) : unknownSymbol;
+            ? charMap.get(realChar) : font.unknown;
 
         drawCharacter(char);
         drawLetterSpace();
