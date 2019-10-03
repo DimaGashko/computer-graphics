@@ -116,6 +116,11 @@ function initEvents() {
         coords.y = startCoords.y + deltaY;
     });
 
+    $.canvas.addEventListener('mousewheel', (e: MouseWheelEvent) => {
+        const delta = e.deltaY / 200;
+        setZoom(options.zoom + delta);
+    });
+
     $.canvas.addEventListener('keydown', ({ keyCode }) => {
         pressedKeys[keyCode] = true;
     });
@@ -140,7 +145,7 @@ function drawText(text: string) {
 }
 
 function drawLetterSpace() {
-    ctx.translate((font.size * options.letterSpacing * options.zoom) ^ 0, 0)
+    ctx.translate((font.size * options.letterSpacing * getZoom()) ^ 0, 0)
 }
 
 function drawCharacter(char: Char) {
@@ -185,7 +190,7 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
 }
 
 function drawPixel(x, y) {
-    const z = options.zoom;
+    const z = getZoom();
 
     // Use Math round just for zoom option
     ctx.fillRect(x * z, y * z, z, z);
@@ -235,6 +240,18 @@ function font2CharMap(font: Font) {
     });
 
     return map;
+}
+
+function setZoom(zoom) { 
+    options.zoom = Math.min(Math.max(zoom, 0.1), 10);
+}
+
+function getZoom() {
+    if (options.zoom >= 1) {
+        return Math.round(options.zoom);
+    }
+
+    return options.zoom;
 }
 
 function initGui() {
