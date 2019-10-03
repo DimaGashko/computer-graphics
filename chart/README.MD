@@ -23,3 +23,19 @@ Check it out: http://js-coder.tk/computer-graphics/chart/
 - TypeScript, Pug, Scss
 - Canvas 2d
 - Parsel
+
+## Build
+
+```console
+yarn
+yarn start
+yarn build
+```
+
+or
+
+```console
+npm i
+npm start
+npm run build
+```

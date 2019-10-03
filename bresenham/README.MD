@@ -32,3 +32,19 @@ In this demo font is just array of lines
   . . .
 ]
 ```
+
+## Build
+
+```console
+yarn
+yarn start
+yarn build
+```
+
+or
+
+```console
+npm i
+npm start
+npm run build
+```
