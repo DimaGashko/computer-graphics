@@ -48,7 +48,7 @@ const options = {
     gridColor: '#eee',
     text: 'A5',
     letterSpacing: 0.8,
-    worldZoom: 1,
+    worldZoom: 3,
     resetWorldCoords: () => {
         coords = initialCoords.copy();
     }
