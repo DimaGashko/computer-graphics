@@ -36,4 +36,11 @@ export default class Vector {
       return this;
    }
 
+   mod(v: Vector) { 
+      this.x %= v.x;
+      this.y %= v.y;
+
+      return this;
+   }
+
 }

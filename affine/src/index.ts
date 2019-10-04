@@ -45,7 +45,6 @@ const KEYS = {
 
 const options = {
     color: '#0f0',
-    gridColor: '#eee',
     text: 'A5',
     letterSpacing: 0.8,
     worldZoom: 3,
@@ -78,7 +77,7 @@ function drawFrame() {
     initStyles();
     useKeyboard();
 
-    drawGrid();
+    drawAllGrids();
     draw();
 
     ctx.restore();
@@ -103,7 +102,7 @@ function initEvents() {
 
     $.canvas.addEventListener('mousewheel', (e: MouseWheelEvent) => {
         const delta = -e.deltaY / 200;
-        const newZoom = Math.min(Math.max(options.worldZoom + delta, 0.4), 10);
+        const newZoom = Math.min(Math.max(options.worldZoom + delta, 0.1), 15);
 
         options.worldZoom = newZoom;
     });
@@ -186,26 +185,69 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
 }
 
 function drawPixel(x, y) {
-    const coords = world2View(new Vector(x, y));
+    const coords = toView(new Vector(x, y));
     const z = options.worldZoom;
 
     ctx.fillRect(coords.x, coords.y, z, z);
 }
 
-function drawGrid() {
+function drawAllGrids() {
     ctx.save();
-    ctx.strokeStyle = options.gridColor;
+    ctx.strokeStyle = 'rgba(255,255,255,.2)';
 
+    if (options.worldZoom >= 9) {
+        ctx.lineWidth = 1;
+        drawGrid(new Vector(2, 2));
+    }
 
+    if (options.worldZoom >= 3) {
+        ctx.lineWidth = 1;
+        drawGrid(new Vector(10, 10));
+    }
+
+    if (options.worldZoom >= 0.4) {
+        ctx.lineWidth = 2;
+        drawGrid(new Vector(50, 50));
+    }
+
+    ctx.lineWidth = (options.worldZoom >= 0.4) ? 3 : 1;
+    drawGrid(new Vector(1000, 1000));
 
     ctx.restore();
+}
+
+function drawGrid(interval: Vector) {
+    const z = new Vector(options.worldZoom, options.worldZoom)
+    const step = interval.copy().mul(z);
+    const numberOfSteps = screenSize.copy().div(step);
+    const g0 = toWorld(new Vector(-1, -1));
+    const worldStart = g0.copy().sub(g0.mod(interval));
+    const start = toView(worldStart);
+
+    for (let i = 0; i < numberOfSteps.x; i++) {
+        const x = Math.round(start.x + step.x * i);
+
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, screenSize.y);
+        ctx.stroke();
+    }
+
+    for (let i = 0; i < numberOfSteps.y; i++) {
+        const y = Math.round(start.y + step.y * i);
+
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(screenSize.x, y);
+        ctx.stroke();
+    }
 }
 
 /**
  * Convert viewport coords to world coords
  * @param coords viport coordinates
  */
-function view2World(targetCoords: Vector) {
+function toWorld(targetCoords: Vector) {
     return targetCoords.copy()
         .sub(screenSize.copy().div(new Vector(2, 2)))
         .div(new Vector(options.worldZoom, options.worldZoom))
@@ -216,7 +258,7 @@ function view2World(targetCoords: Vector) {
  * Convert world coords to viewport coords
  * @param targetCoords world coordinates
  */
-function world2View(targetCoords: Vector) {
+function toView(targetCoords: Vector) {
     return targetCoords.copy()
         .sub(coords)
         .mul(new Vector(options.worldZoom, options.worldZoom))
@@ -268,7 +310,7 @@ function font2CharMap(font: Font) {
 function initGui() {
     gui.addColor(options, 'color');
     gui.add(options, 'text');
-    gui.add(options, 'worldZoom', 0.4, 10, 0.1)
+    gui.add(options, 'worldZoom', 0.1, 15, 0.1)
     gui.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
     gui.add(options, 'resetWorldCoords');
 }
