@@ -11,8 +11,6 @@ import Vector from './scripts/Vector';
 type Line = [number, number, number, number];
 type Char = Line[];
 
-type Vector2 = [number, number];
-
 interface Font {
     size: number,
     chars: {
@@ -46,12 +44,12 @@ const KEYS = {
 }
 
 const options = {
-    color: '#c00',
+    color: '#0f0',
     gridColor: '#eee',
     text: 'A5',
     letterSpacing: 0.8,
     worldZoom: 1,
-    resetCoords: () => {
+    resetWorldCoords: () => {
         coords = initialCoords.copy();
     }
 }
@@ -128,7 +126,6 @@ function initEvents() {
 }
 
 function draw() {
-    ctx.translate(coords.x, coords.y);
     drawText(options.text.toUpperCase());
 }
 
@@ -273,5 +270,5 @@ function initGui() {
     gui.add(options, 'text');
     gui.add(options, 'worldZoom', 0.4, 10, 0.1)
     gui.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
-    gui.add(options, 'resetCoords');
+    gui.add(options, 'resetWorldCoords');
 }
