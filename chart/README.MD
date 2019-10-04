@@ -1,6 +1,6 @@
 # The Chart
 
-Check it out: http://js-coder.tk/computer-graphics/chart/
+Check it out: https://js-coder.tk/computer-graphics/chart/
 
 ![The Chart Example](./src/assets/chart.png)
 
