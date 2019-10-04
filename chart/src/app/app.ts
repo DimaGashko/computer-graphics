@@ -68,6 +68,10 @@ export default class App {
         window.addEventListener('resize', throttle(100, () => {
             this.resize();
         }));
+
+        window.addEventListener('load', () => {
+            this.resize();
+        });
     }
 
     public setZoom(zoom) {
