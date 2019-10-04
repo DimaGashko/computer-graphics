@@ -43,7 +43,7 @@ const KEYS = {
 }
 
 const options = {
-    color: '#c00',
+    color: '#f00',
     text: 'AD5',
     letterSpacing: 0.8,
     zoom: 3,
