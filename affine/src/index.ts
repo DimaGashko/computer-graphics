@@ -8,9 +8,9 @@ import * as dat from 'dat.gui';
 import _font from './font';
 import Vector from './scripts/Vector';
 import { scale, translate } from './affine';
-import matrixMulMatrix from './scripts/matrixMulMatrix';
-import matrixMulVec from './scripts/matrixMulVec';
-import copyMatrix from './scripts/copyMatrix';
+import matrixMulMatrix from './scripts/matrix/matrixMulMatrix';
+import matrixMulVec from './scripts/matrix/matrixMulVec';
+import copyMatrix from './scripts/matrix/copyMatrix';
 
 type Line = [number, number, number, number];
 type Char = Line[];
