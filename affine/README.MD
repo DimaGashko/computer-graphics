@@ -1,10 +1,12 @@
-# Bresenham's line Algorithm
+# Affine transformations
 
-Check it out: http://js-coder.tk/computer-graphics/bresenham/
+Check it out: http://js-coder.tk/computer-graphics/affine/
 
-![The Bresenham Example](./src/assets/bresenham.png)
+![The Bresenham Example](./src/assets/affine.png)
 
-In this Bresenham's line Algorithm demo you can write you own text and we draw it by the algorithm (unfortunately only 3 characters in our font now, but you can send a pull request, just edit the [font](./src/font.json))
+In this Bresenham's line Algorithm demo you can write you own text and we draw it by the bresenham algorithm (unfortunately only 3 characters in our font now, but you can send a pull request, just edit the [font](./src/font.json)). 
+
+After that you can move your text, rotate and scale it.
 
 ## Features
 
