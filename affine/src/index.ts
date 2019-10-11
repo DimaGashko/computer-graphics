@@ -100,12 +100,12 @@ function initEvents() {
         coords = startCoords.copy().add(delta);
     });
 
-    $.canvas.addEventListener('mousewheel', (e: MouseWheelEvent) => {
-        const delta = -e.deltaY / 200;
-        const newZoom = Math.min(Math.max(options.worldZoom + delta, 0.1), 15);
-
-        options.worldZoom = newZoom;
-    });
+    $.canvas.addEventListener('mousewheel', throttle(16, (e: MouseWheelEvent) => {
+        const cur = options.worldZoom;
+        const delta = -e.deltaY * cur / 1000;
+        
+        options.worldZoom = Math.min(Math.max(cur + delta, 0.05), 50);
+    }));
 
     $.canvas.addEventListener('keydown', ({ keyCode }) => {
         pressedKeys[keyCode] = true;
@@ -115,7 +115,7 @@ function initEvents() {
         pressedKeys[keyCode] = false;
     });
 
-    window.addEventListener('resize', throttle(100, () => {
+    window.addEventListener('resize', throttle(50, () => {
         resize();
     }));
 
@@ -197,7 +197,7 @@ function drawAllGrids() {
 
     if (options.worldZoom >= 9) {
         ctx.lineWidth = 1;
-        drawGrid(new Vector(2, 2));
+        drawGrid(new Vector(1, 1));
     }
 
     if (options.worldZoom >= 3) {
@@ -208,6 +208,9 @@ function drawAllGrids() {
     if (options.worldZoom >= 0.4) {
         ctx.lineWidth = 2;
         drawGrid(new Vector(50, 50));
+    } else if (options.worldZoom >= 0.08) {
+        ctx.lineWidth = 1;
+        drawGrid(new Vector(250, 250));
     }
 
     ctx.lineWidth = (options.worldZoom >= 0.4) ? 3 : 1;
@@ -310,7 +313,7 @@ function font2CharMap(font: Font) {
 function initGui() {
     gui.addColor(options, 'color');
     gui.add(options, 'text');
-    gui.add(options, 'worldZoom', 0.1, 15, 0.1)
+    gui.add(options, 'worldZoom', 0.05, 50, 0.05)
     gui.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
     gui.add(options, 'resetWorldCoords');
 }
