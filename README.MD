@@ -1,11 +1,11 @@
 # Computer Graphics
 
-## The Chart
+## Affine transformations
 
-- Source: [chart](./chart)
-- Links: https://js-coder.tk/computer-graphics/chart/
+- Source: [affine](./affine)
+- Link: https://js-coder.tk/computer-graphics/affine/
 
-![The Chart Example](./chart/src/assets/chart.png)
+(in progress)
 
 ## Bresenham's line Algorithm
 
@@ -13,3 +13,11 @@
 - Link: https://js-coder.tk/computer-graphics/bresenham/
 
 ![The Bresenham Example](./bresenham/src/assets/bresenham.png)
+
+## The Chart
+
+- Source: [chart](./chart)
+- Links: https://js-coder.tk/computer-graphics/chart/
+
+![The Chart Example](./chart/src/assets/chart.png)
+
