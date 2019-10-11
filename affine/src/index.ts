@@ -7,10 +7,12 @@ import * as dat from 'dat.gui';
 
 import _font from './font';
 import Vector from './scripts/Vector';
-import { scale, translate } from './affine';
 import matrixMulMatrix from './scripts/matrix/matrixMulMatrix';
 import matrixMulVec from './scripts/matrix/matrixMulVec';
-import copyMatrix from './scripts/matrix/copyMatrix';
+import VirtualCanvas from './scripts/VirtualCanvas';
+
+import { scale, translate } from './affine';
+import invert3x3Matrix from './scripts/matrix/invert3x3Matrix';
 
 type Line = [number, number, number, number];
 type Char = Line[];
@@ -69,7 +71,10 @@ let tMatrix = [
     [0, 0, 1],
 ]
 
-let curTMatrix: number[][] = null;
+let invertTMatrix: number[][];
+
+const virtualCanvas = new VirtualCanvas();
+let charStart = 0;
 
 resize();
 updateTMatrix();
@@ -92,10 +97,10 @@ function drawFrame() {
     initStyles();
     useKeyboard();
 
-    curTMatrix = copyMatrix(tMatrix);
-
+    clear();
     drawAllGrids();
-    draw();
+    virtualDraw();
+    realDraw();
 
     ctx.restore();
 }
@@ -141,8 +146,32 @@ function initEvents() {
     });
 }
 
-function draw() {
+function virtualDraw() {
     drawText(options.text.toUpperCase());
+}
+
+function realDraw() {
+    const bounding = virtualCanvas.getBounding().map(({ x, y }) => {
+        return useTransform(x, y);
+    });
+
+    let counter = 0;
+
+    for (let i = bounding[0].x; i <= bounding[1].x; i++) {
+        for (let j = bounding[0].y; j <= bounding[1].y; j++) {
+            const [x, y] = matrixMulVec(invertTMatrix, [i, j, 1]);
+            if (!virtualCanvas.check(x, y)) continue;
+            counter++;
+            drawRealPixel(i, j);
+        }
+    }
+
+    console.log(counter);
+}
+
+function useTransform(x: number, y: number) {
+    [x, y] = matrixMulVec(tMatrix, [x, y, 1]);
+    return new Vector(x, y);
 }
 
 function drawText(text: string) {
@@ -156,8 +185,7 @@ function drawText(text: string) {
 }
 
 function drawLetterSpace() {
-    const translateMatrix = translate(font.size * options.letterSpacing, 0);
-    curTMatrix = matrixMulMatrix(curTMatrix, translateMatrix);
+    charStart += font.size * options.letterSpacing;
 }
 
 function drawCharacter(char: Char) {
@@ -181,7 +209,7 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
     let xErr = 0;
     let yErr = 0;
 
-    drawPixel(x, y);
+    drawVirtualPixel(x, y);
 
     for (let i = 0; i < d; i++) {
         xErr += dx;
@@ -197,7 +225,7 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
             y += incY;
         }
 
-        drawPixel(x, y);
+        drawVirtualPixel(x, y);
     }
 }
 
@@ -213,11 +241,18 @@ function updateTMatrix() {
     (<any>window).tm = tMatrix;
 }
 
-function drawPixel(x: number, y: number) {
+function drawVirtualPixel(x: number, y: number) {
+    virtualCanvas.setPixel(x + charStart, y, true);
+}
+
+function drawRealPixel(x: number, y: number) {
     const z = options.worldZoom;
 
-    [x, y] = matrixMulVec(curTMatrix, [x, y, 1]);
     ({ x, y } = toView(new Vector(x, y)));
+
+    if (x < -z || y < -z || x > screenSize.x || y > screenSize.y) {
+        return;
+    }
 
     ctx.fillRect(x, y, z, z);
 }
@@ -329,6 +364,13 @@ function updateCanvasSize() {
 
 function clearCanvas() {
     ctx.clearRect(0, 0, screenSize.x, screenSize.y);
+}
+
+function clear() {
+    virtualCanvas.clear();
+    charStart = 0;
+
+    invertTMatrix = invert3x3Matrix(tMatrix);
 }
 
 function font2CharMap(font: Font) {
