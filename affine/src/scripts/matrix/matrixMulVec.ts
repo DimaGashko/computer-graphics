@@ -6,22 +6,17 @@
  *    [-1, 0, 1],
  * 
  * ], [1, 2, -1]); 
- * // [10],
- * // [-3],
- * // [-2],
+ * // [10, -3, -2],
  * ```
 */
-export default function matrixMulVec(a: number[][], b: number[]): number[][] {
+export default function matrixMulVec(a: number[][], b: number[]): number[] {
     const m1 = a.length;
     const m2 = b.length;
+    
+    const res = new Array(m1);
 
     if (m1 && a[0].length !== m2) {
         throw new TypeError('The matrix and the vector are inconsistent');
-    }
-
-    const res = new Array(m1);
-    for (let i = 0; i < m1; i++) {
-        res[i] = new Array(1);
     }
 
     for (let j = 0; j < m1; j++) {
@@ -31,7 +26,7 @@ export default function matrixMulVec(a: number[][], b: number[]): number[][] {
             item += a[j][k] * b[k];
         }
 
-        res[j][0] = item;
+        res[j] = item;
     }
 
     return res;

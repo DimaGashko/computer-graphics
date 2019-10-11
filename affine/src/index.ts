@@ -7,6 +7,10 @@ import * as dat from 'dat.gui';
 
 import _font from './font';
 import Vector from './scripts/Vector';
+import { scale, translate } from './affine';
+import matrixMulMatrix from './scripts/matrixMulMatrix';
+import matrixMulVec from './scripts/matrixMulVec';
+import copyMatrix from './scripts/copyMatrix';
 
 type Line = [number, number, number, number];
 type Char = Line[];
@@ -48,6 +52,8 @@ const options = {
     text: 'A5',
     letterSpacing: 0.8,
     worldZoom: 3,
+    zoomX: 1,
+    zoomY: 1,
     resetWorldCoords: () => {
         coords = initialCoords.copy();
     }
@@ -57,7 +63,16 @@ const screenSize = new Vector(0, 0);
 const initialCoords = new Vector(50, 50);
 let coords = initialCoords.copy();
 
+let tMatrix = [
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1],
+]
+
+let curTMatrix: number[][] = null;
+
 resize();
+updateTMatrix();
 start();
 initGui();
 initEvents();
@@ -76,6 +91,8 @@ function drawFrame() {
 
     initStyles();
     useKeyboard();
+
+    curTMatrix = copyMatrix(tMatrix);
 
     drawAllGrids();
     draw();
@@ -103,7 +120,7 @@ function initEvents() {
     $.canvas.addEventListener('mousewheel', throttle(16, (e: MouseWheelEvent) => {
         const cur = options.worldZoom;
         const delta = -e.deltaY * cur / 1000;
-        
+
         options.worldZoom = Math.min(Math.max(cur + delta, 0.05), 50);
     }));
 
@@ -139,8 +156,8 @@ function drawText(text: string) {
 }
 
 function drawLetterSpace() {
-    const z = options.worldZoom;
-    ctx.translate((font.size * options.letterSpacing * z) ^ 0, 0)
+    const translateMatrix = translate(font.size * options.letterSpacing, 0);
+    curTMatrix = matrixMulMatrix(curTMatrix, translateMatrix);
 }
 
 function drawCharacter(char: Char) {
@@ -184,11 +201,25 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
     }
 }
 
-function drawPixel(x, y) {
-    const coords = toView(new Vector(x, y));
+function updateTMatrix() {
+    const rawTMatrixes = [
+        scale(options.zoomX, options.zoomY)
+    ];
+
+    tMatrix = rawTMatrixes.reduceRight((prev, cur) => {
+        return matrixMulMatrix(prev, cur);
+    });
+
+    (<any>window).tm = tMatrix;
+}
+
+function drawPixel(x: number, y: number) {
     const z = options.worldZoom;
 
-    ctx.fillRect(coords.x, coords.y, z, z);
+    [x, y] = matrixMulVec(curTMatrix, [x, y, 1]);
+    ({ x, y } = toView(new Vector(x, y)));
+
+    ctx.fillRect(x, y, z, z);
 }
 
 function drawAllGrids() {
@@ -313,6 +344,8 @@ function font2CharMap(font: Font) {
 function initGui() {
     gui.addColor(options, 'color');
     gui.add(options, 'text');
+    gui.add(options, 'zoomX', 0.1, 10, 0.1).onChange(() => updateTMatrix());
+    gui.add(options, 'zoomY', 0.1, 10, 0.1).onChange(() => updateTMatrix());
     gui.add(options, 'worldZoom', 0.05, 50, 0.05)
     gui.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
     gui.add(options, 'resetWorldCoords');
