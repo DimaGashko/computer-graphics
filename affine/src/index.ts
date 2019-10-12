@@ -9,6 +9,7 @@ import _font from './font';
 import Vector from './scripts/Vector';
 import matrixMulMatrix from './scripts/matrix/matrixMulMatrix';
 import matrix3x3MulVec from './scripts/matrix/matrix3x3MulVec';
+import VirtualCanvas from './scripts/VirtualCanvas';
 
 import { scale, translate, reflection, rotate, shear } from './affine';
 import invert3x3Matrix from './scripts/matrix/invert3x3Matrix';
@@ -27,16 +28,13 @@ interface Font {
 
 const $: {
     canvas?: HTMLCanvasElement,
-    realImgCanvas?: HTMLCanvasElement,
     [type: string]: HTMLElement
 } = {};
 
 $.root = document.querySelector('.app');
 $.canvas = $.root.querySelector('.app__canvas');
-$.realImgCanvas = $.root.querySelector('.app__real-img-canvas');
 
 const ctx = $.canvas.getContext('2d');
-const rCtx = $.realImgCanvas.getContext('2d');
 const gui = new dat.GUI();
 
 const pressedKeys: { [keycode: string]: boolean } = {}
@@ -53,7 +51,7 @@ const KEYS = {
 
 const options = {
     color: '#0f0',
-    text: 'rA5',
+    text: 'A5',
     letterSpacing: 0.8,
     worldZoom: 3,
 
@@ -74,7 +72,6 @@ const options = {
 }
 
 const screenSize = new Vector(0, 0);
-const rCanvasSize = new Vector(0, 0);
 const initialCoords = new Vector(50, 50);
 let coords = initialCoords.copy();
 
@@ -86,6 +83,7 @@ let tMatrix = [
 
 let invertTMatrix: number[][];
 
+const virtualCanvas = new VirtualCanvas();
 let charStart = 0;
 
 (<any>window).set = (m) => {
@@ -110,7 +108,6 @@ function start() {
 function drawFrame() {
     ctx.save();
 
-    updateRCanvas();
     initStyles();
     useKeyboard();
 
@@ -181,102 +178,41 @@ function updateTMatrix() {
 
 function draw() {
     drawText(options.text.toUpperCase());
-
-    if (options.noGaps) {
-        inverseDraw();
-    }
-
-}
-
-function inverseDraw() {
-    const rData = rCtx.getImageData(0, 0, rCanvasSize.x, rCanvasSize.y);
+    if (!options.noGaps) return;
 
     const z = options.worldZoom;
 
-    const min = toWorld(new Vector(0, 0));
-    const max = toWorld(screenSize);
+    const bounding = virtualCanvas.getBounding().map(({ x, y }) => {
+        [x, y] = matrix3x3MulVec(tMatrix, [x, y, 1]);
+        return new Vector(x, y);
+    }).map(item => toView(item));
 
-    const start = new Vector(0, 0);
-    const end = rCanvasSize.copy();
+    const startX = Math.floor(Math.max(bounding[0].x - 1000, 0));
+    const startY = Math.floor(Math.max(bounding[0].y - 1000, 0));
 
-    start.x = Math.max(start.x, min.x) ^ 0;
-    start.y = Math.max(start.y, min.y) ^ 0;
+    const endX = Math.ceil(Math.min(bounding[1].x + 10000, screenSize.x));
+    const endY = Math.ceil(Math.min(bounding[1].y + 10000, screenSize.y));
 
-    end.x = Math.min(end.x, max.x) ^ 0;
-    end.y = Math.min(end.y, max.y) ^ 0;
+    const stepsX = (endX - startX) / z;
+    const stepsY = (endY - startY) / z;
 
-    const steps = end.sub(start);
+    const worldStart = toWorld(new Vector(startX, startY));
 
-    const viewStart = toView(start);
-    viewStart.x = viewStart.x ^ 0;
-    viewStart.y = viewStart.y ^ 0;
+    for (let i = 0; i < stepsX; i++) {
+        for (let j = 0; j < stepsY; j++) {
+            const worldX = worldStart.x + i;
+            const worldY = worldStart.y + j;
 
-    let c = 0;
-    for (let i = 0; i <= steps.x; i++) {
-        for (let j = 0; j <= steps.y; j++) {
-            let [x, y] = matrix3x3MulVec(invertTMatrix, [start.x + i, start.y + j, 1]);
-            const pixel = getPixel(rData, x, y);
-            if (isEmptyPixel(pixel)) continue;
+            let [x, y] = matrix3x3MulVec(invertTMatrix, [worldX, worldY, 1]);
+            if (!virtualCanvas.check(x, y)) continue;
 
-            ({ x, y } = toView(new Vector(x, y)));
-            ctx.fillRect(x ^ 0, y ^ 0, z, z);
+            const viewX = startX + i * z;
+            const viewY = startY + j * z;
 
-            c++;
+            ctx.fillRect(viewX, viewY, z, z);
         }
     }
-    console.log(c);
-    /*
-        const bounding = virtualCanvas.getBounding().map(({ x, y }) => {
-            [x, y] = matrix3x3MulVec(tMatrix, [x, y, 1]);
-            return new Vector(x, y);
-        }).map(item => toView(item));
-    
-        const startX = Math.floor(Math.max(bounding[0].x - 1000, 0));
-        const startY = Math.floor(Math.max(bounding[0].y - 1000, 0));
-    
-        const endX = Math.ceil(Math.min(bounding[1].x + 10000, screenSize.x));
-        const endY = Math.ceil(Math.min(bounding[1].y + 10000, screenSize.y));
-    
-        const stepsX = (endX - startX) / z;
-        const stepsY = (endY - startY) / z;
-    
-        const worldStart = toWorld(new Vector(startX, startY));
-    
-        for (let i = 0; i < stepsX; i++) {
-            for (let j = 0; j < stepsY; j++) {
-                const worldX = worldStart.x + i;
-                const worldY = worldStart.y + j;
-    
-                let [x, y] = matrix3x3MulVec(invertTMatrix, [worldX, worldY, 1]);
-                if (!virtualCanvas.check(x, y)) continue;
-    
-                const viewX = startX + i * z;
-                const viewY = startY + j * z;
-    
-                ctx.fillRect(viewX, viewY, z, z);
-            }
-        }*/
-}
 
-function getPixel({ width, data }: ImageData, x: number, y: number) {
-    x = Math.round(x);
-    y = Math.round(y);
-
-    const i = (y * width + x) * 4;
-    return [data[i], data[i + 1], data[i + 2], data[i + 3]];
-}
-
-function setPixel({ width, data }: ImageData, x: number, y: number, val: number[]) {
-    const i = (y * width + x) * 4;
-
-    data[i] = val[0];
-    data[i + 1] = val[1];
-    data[i + 2] = val[2];
-    data[i + 3] = val[3];
-}
-
-function isEmptyPixel([r = 0, g = 0, b = 0, a = 0]: number[]) {
-    return r + g + b + a === 0;
 }
 
 function drawText(text: string) {
@@ -336,14 +272,7 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
 
 function drawPixel(x: number, y: number) {
     if (options.noGaps) {
-        x = (x + charStart) ^ 0;
-        y = y ^ 0;
-
-        if (x < 0 || y < 0 || x > rCanvasSize.x || y > rCanvasSize.y) {
-            return;
-        }
-
-        rCtx.fillRect(x, y, 1, 1);
+        virtualCanvas.setPixel(x + charStart, y, true);
     } else {
         [x, y] = matrix3x3MulVec(tMatrix, [x + charStart, y, 1]);
         ({ x, y } = toView(new Vector(x, y)));
@@ -438,13 +367,8 @@ function useKeyboard() {
     if (pressedKeys[KEYS['bottom']]) coords.y += step;
 }
 
-function updateGapsType() {
-    $.realImgCanvas.hidden = !options.noGaps;
-}
-
 function initStyles() {
     ctx.fillStyle = options.color;
-    rCtx.fillStyle = options.color;
 }
 
 function resize() {
@@ -462,27 +386,12 @@ function updateCanvasSize() {
     $.canvas.height = screenSize.y;
 }
 
-function updateRCanvas() {
-    const len = options.text.length;
-    const size = font.size;
-
-    rCanvasSize.x = len * size + (options.letterSpacing - 1) * (len - 1) * size;
-    rCanvasSize.y = size * 1.1;
-
-    rCanvasSize.x = Math.min(rCanvasSize.x, screenSize.x);
-    rCanvasSize.y = Math.min(rCanvasSize.y, screenSize.y);
-
-    $.realImgCanvas.width = rCanvasSize.x;
-    $.realImgCanvas.height = rCanvasSize.y;
-
-    rCtx.clearRect(0, 0, rCanvasSize.x, rCanvasSize.y);
-}
-
 function clearCanvas() {
     ctx.clearRect(0, 0, screenSize.x, screenSize.y);
 }
 
 function clear() {
+    virtualCanvas.clear();
     charStart = 0;
 
     invertTMatrix = invert3x3Matrix(tMatrix);
@@ -504,7 +413,7 @@ function initGui() {
     setup.addColor(options, 'color');
     setup.add(options, 'text');
     setup.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
-    setup.add(options, 'noGaps').onChange(updateGapsType);
+    setup.add(options, 'noGaps');
     setup.add(options, 'resetWorldCoords');
 
     const base = gui.addFolder('Base Transformations');

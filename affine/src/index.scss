@@ -36,31 +36,5 @@ body {
     &:focus {
         opacity: 1;
     }
-}
 
-.app__real-img-canvas {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-
-    background: rgba(#212121, .9);
-    padding: 10px;
-
-    transform-origin: left bottom;
-
-    image-rendering: optimizeSpeed;             
-    image-rendering: -moz-crisp-edges;          
-    image-rendering: -o-crisp-edges;            
-    image-rendering: -webkit-optimize-contrast; 
-    image-rendering: pixelated;
-    image-rendering: optimize-contrast;         
-    -ms-interpolation-mode: nearest-neighbor;  
-
-    transition: transform .3s;
-
-    transform: scale(1);
-
-    &:hover {
-        transform: scale(2);
-    }
 }
