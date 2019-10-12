@@ -53,7 +53,7 @@ const KEYS = {
 
 const options = {
     color: '#0f0',
-    text: 'A5',
+    text: 'rA5',
     letterSpacing: 0.8,
     worldZoom: 3,
 
@@ -189,6 +189,8 @@ function draw() {
 }
 
 function inverseDraw() {
+    const rData = rCtx.getImageData(0, 0, rCanvasSize.x, rCanvasSize.y);
+
     const z = options.worldZoom;
 
     const min = toWorld(new Vector(0, 0));
@@ -212,9 +214,12 @@ function inverseDraw() {
     let c = 0;
     for (let i = 0; i <= steps.x; i++) {
         for (let j = 0; j <= steps.y; j++) {
-            
+            let [x, y] = matrix3x3MulVec(invertTMatrix, [start.x + i, start.y + j, 1]);
+            const pixel = getPixel(rData, x, y);
+            if (isEmptyPixel(pixel)) continue;
 
-            ctx.fillRect(viewStart.x + i * z, viewStart.y + j * z, z, z);
+            ({ x, y } = toView(new Vector(x, y)));
+            ctx.fillRect(x ^ 0, y ^ 0, z, z);
 
             c++;
         }
@@ -251,6 +256,27 @@ function inverseDraw() {
                 ctx.fillRect(viewX, viewY, z, z);
             }
         }*/
+}
+
+function getPixel({ width, data }: ImageData, x: number, y: number) {
+    x = Math.round(x);
+    y = Math.round(y);
+
+    const i = (y * width + x) * 4;
+    return [data[i], data[i + 1], data[i + 2], data[i + 3]];
+}
+
+function setPixel({ width, data }: ImageData, x: number, y: number, val: number[]) {
+    const i = (y * width + x) * 4;
+
+    data[i] = val[0];
+    data[i + 1] = val[1];
+    data[i + 2] = val[2];
+    data[i + 3] = val[3];
+}
+
+function isEmptyPixel([r = 0, g = 0, b = 0, a = 0]: number[]) {
+    return r + g + b + a === 0;
 }
 
 function drawText(text: string) {
