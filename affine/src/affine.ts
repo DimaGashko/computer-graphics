@@ -7,9 +7,10 @@ export function scale(cx: number, cy: number) {
 }
 
 export function translate(dx: number, dy: number) {
+    const a =-1.08;
     return [
-        [1, 0, dx],
-        [0, 1, dy],
+        [Math.cos(a), -Math.sin(a), 0],
+        [Math.sin(a), Math.cos(a), 0],
         [0, 0, 1],
     ];
 }

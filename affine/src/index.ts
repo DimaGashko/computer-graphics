@@ -58,6 +58,7 @@ const options = {
     zoomY: 1,
     translateX: 0,
     translateY: 0,
+    noGaps: false,
     resetWorldCoords: () => {
         coords = initialCoords.copy();
     }
@@ -101,8 +102,7 @@ function drawFrame() {
 
     clear();
     drawAllGrids();
-    virtualDraw();
-    realDraw();
+    draw();
 
     ctx.restore();
 }
@@ -148,15 +148,16 @@ function initEvents() {
     });
 }
 
-function virtualDraw() {
-    drawText(options.text.toUpperCase());
-}
 
-function realDraw() {
+function draw() {
+    drawText(options.text.toUpperCase());
+    if (!options.noGaps) return;
+
     const z = options.worldZoom;
 
     const bounding = virtualCanvas.getBounding().map(({ x, y }) => {
-        return useTransform(x, y);
+        [x, y] = matrix3x3MulVec(tMatrix, [x, y, 1]);
+        return new Vector(x, y);
     }).map(item => toView(item));
 
     const startX = Math.floor(Math.max(bounding[0].x, 0));
@@ -185,11 +186,6 @@ function realDraw() {
         }
     }
 
-}
-
-function useTransform(x: number, y: number) {
-    [x, y] = matrix3x3MulVec(tMatrix, [x, y, 1]);
-    return new Vector(x, y);
 }
 
 function drawText(text: string) {
@@ -227,7 +223,7 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
     let xErr = 0;
     let yErr = 0;
 
-    drawVirtualPixel(x, y);
+    drawPixel(x, y);
 
     for (let i = 0; i < d; i++) {
         xErr += dx;
@@ -243,13 +239,14 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
             y += incY;
         }
 
-        drawVirtualPixel(x, y);
+        drawPixel(x, y);
     }
 }
 
 function updateTMatrix() {
     const rawTMatrixes = [
-        scale(options.zoomX, options.zoomY)
+        translate(options.translateX, options.translateY),
+        scale(options.zoomX, options.zoomY),
     ];
 
     tMatrix = rawTMatrixes.reduceRight((prev, cur) => {
@@ -259,8 +256,15 @@ function updateTMatrix() {
     (<any>window).tm = tMatrix;
 }
 
-function drawVirtualPixel(x: number, y: number) {
-    virtualCanvas.setPixel(x + charStart, y, true);
+function drawPixel(x: number, y: number) {
+    if (options.noGaps) {
+        virtualCanvas.setPixel(x + charStart, y, true);
+    } else {
+        [x, y] = matrix3x3MulVec(tMatrix, [x + charStart, y, 1]);
+        ({ x, y } = toView(new Vector(x, y)));
+        const z = options.worldZoom;
+        ctx.fillRect(x, y, z, z);
+    }
 }
 
 function drawAllGrids() {
@@ -392,10 +396,11 @@ function font2CharMap(font: Font) {
 function initGui() {
     gui.addColor(options, 'color');
     gui.add(options, 'text');
-    gui.add(options, 'zoomX', 0.1, 3, 0.1).onChange(updateTMatrix());
-    gui.add(options, 'zoomY', 0.1, 3, 0.1).onChange(updateTMatrix());
-    gui.add(options, 'translateX', 0.1, 3, 0.1).onChange(updateTMatrix());
-    gui.add(options, 'translateY', 0.1, 3, 0.1).onChange(updateTMatrix());
+    gui.add(options, 'zoomX', 0.1, 3, 0.1).onChange(updateTMatrix);
+    gui.add(options, 'zoomY', 0.1, 3, 0.1).onChange(updateTMatrix);
+    gui.add(options, 'translateX', -500, 500, 1).onChange(updateTMatrix);
+    gui.add(options, 'translateY', -500, 500, 1).onChange(updateTMatrix);
+    gui.add(options, 'noGaps');
     gui.add(options, 'worldZoom', 0.05, 50, 0.05)
     gui.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
     gui.add(options, 'resetWorldCoords');
