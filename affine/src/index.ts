@@ -33,7 +33,7 @@ const $: {
 
 $.root = document.querySelector('.app');
 $.canvas = $.root.querySelector('.app__canvas');
-$.realImgCanvas = document.createElement('canvas');
+$.realImgCanvas = $.root.querySelector('.app__real-img-canvas');
 
 const ctx = $.canvas.getContext('2d');
 const rCtx = $.realImgCanvas.getContext('2d');
@@ -110,12 +110,12 @@ function start() {
 function drawFrame() {
     ctx.save();
 
+    updateRCanvas();
     initStyles();
     useKeyboard();
 
     clear();
     drawAllGrids();
-    updateRCanvas();
     draw();
 
     ctx.restore();
@@ -280,8 +280,7 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
 
 function drawPixel(x: number, y: number) {
     if (options.noGaps) {
-        ({ x, y } = toView(new Vector(x, y)));
-        rCtx.fillRect(x ^ 0, y ^ 0, 1, 1);
+        rCtx.fillRect((x + charStart) ^ 0, y ^ 0, 1, 1);
     } else {
         [x, y] = matrix3x3MulVec(tMatrix, [x + charStart, y, 1]);
         ({ x, y } = toView(new Vector(x, y)));
@@ -378,6 +377,7 @@ function useKeyboard() {
 
 function initStyles() {
     ctx.fillStyle = options.color;
+    rCtx.fillStyle = options.color;
 }
 
 function resize() {
@@ -397,9 +397,10 @@ function updateCanvasSize() {
 
 function updateRCanvas() {
     const len = options.text.length;
+    const size = font.size;
 
-    rCanvasSize.x = font.size * (2 * len - 1);
-    rCanvasSize.y = font.size;
+    rCanvasSize.x = len * size + (options.letterSpacing - 1) * (len - 1) * size;
+    rCanvasSize.y = size * 1.1;
 
     $.realImgCanvas.width = rCanvasSize.x;
     $.realImgCanvas.height = rCanvasSize.y;
