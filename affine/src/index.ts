@@ -182,32 +182,21 @@ function draw() {
 
     const z = options.worldZoom;
 
-    const bounding = virtualCanvas.getBounding().map(({ x, y }) => {
-        [x, y] = matrix3x3MulVec(tMatrix, [x, y, 1]);
-        return new Vector(x, y);
-    }).map(item => toView(item));
+    const start = new Vector(0, 0);
+    const end = screenSize.copy();
 
-    const startX = Math.floor(Math.max(bounding[0].x - 1000, 0));
-    const startY = Math.floor(Math.max(bounding[0].y - 1000, 0));
+    const step = Math.min(z ^ 0, 1);
+    const steps = end.sub(start).div(new Vector(step, step));
+    
+    for (let i = 0; i < steps.x; i++) {
+        for (let j = 0; j < steps.y; j++) {
+            const viewX = start.x + i * step;
+            const viewY = start.y + j * step;
 
-    const endX = Math.ceil(Math.min(bounding[1].x + 10000, screenSize.x));
-    const endY = Math.ceil(Math.min(bounding[1].y + 10000, screenSize.y));
+            let { x, y } = toWorld(new Vector(viewX, viewY));
 
-    const stepsX = (endX - startX) / z;
-    const stepsY = (endY - startY) / z;
-
-    const worldStart = toWorld(new Vector(startX, startY));
-
-    for (let i = 0; i < stepsX; i++) {
-        for (let j = 0; j < stepsY; j++) {
-            const worldX = worldStart.x + i;
-            const worldY = worldStart.y + j;
-
-            let [x, y] = matrix3x3MulVec(invertTMatrix, [worldX, worldY, 1]);
+            [x, y] = matrix3x3MulVec(invertTMatrix, [x, y, 1]);
             if (!virtualCanvas.check(x, y)) continue;
-
-            const viewX = startX + i * z;
-            const viewY = startY + j * z;
 
             ctx.fillRect(viewX, viewY, z, z);
         }
@@ -272,9 +261,9 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
 
 function drawPixel(x: number, y: number) {
     if (options.noGaps) {
-        virtualCanvas.setPixel(x + charStart, y, true);
+        virtualCanvas.setPixel(x + charStart ^ 0, y, true);
     } else {
-        [x, y] = matrix3x3MulVec(tMatrix, [x + charStart, y, 1]);
+        [x, y] = matrix3x3MulVec(tMatrix, [x + charStart ^ 0, y, 1]);
         ({ x, y } = toView(new Vector(x, y)));
         const z = options.worldZoom;
         ctx.fillRect(x, y, z, z);
