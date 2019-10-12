@@ -8,9 +8,9 @@ export default class VirtualCanvas {
         new Vector(0, 0),
     ];
 
-    public setPixel(x: number, y: number, val: boolean) {
-        x = Math.floor(x);
-        y = Math.floor(y);
+    public setPixel(_x: number, _y: number, val: boolean) {
+        let x = Math.floor(_x);
+        let y = Math.floor(_y);
 
         this.data[x] = this.data[x] || [];
         this.data[x][y] = val;
@@ -24,8 +24,7 @@ export default class VirtualCanvas {
         x = Math.floor(x);
         y = Math.floor(y);
 
-        this.data[x] = this.data[x] || [];
-        return this.data[x][y];
+        return (x in this.data) ? this.data[x][y] : false;
     }
 
     public clear() {
@@ -37,7 +36,7 @@ export default class VirtualCanvas {
     }
 
     public getBounding() {
-        const offset = new Vector(5, 5);
+        const offset = new Vector(2, 2);
 
         return [
             this.bounding[0].copy().sub(offset),

@@ -8,7 +8,7 @@ import * as dat from 'dat.gui';
 import _font from './font';
 import Vector from './scripts/Vector';
 import matrixMulMatrix from './scripts/matrix/matrixMulMatrix';
-import matrixMulVec from './scripts/matrix/matrixMulVec';
+import matrix3x3MulVec from './scripts/matrix/matrix3x3MulVec';
 import VirtualCanvas from './scripts/VirtualCanvas';
 
 import { scale, translate } from './affine';
@@ -56,6 +56,8 @@ const options = {
     worldZoom: 3,
     zoomX: 1,
     zoomY: 1,
+    translateX: 0,
+    translateY: 0,
     resetWorldCoords: () => {
         coords = initialCoords.copy();
     }
@@ -151,26 +153,42 @@ function virtualDraw() {
 }
 
 function realDraw() {
+    const z = options.worldZoom;
+
     const bounding = virtualCanvas.getBounding().map(({ x, y }) => {
         return useTransform(x, y);
-    });
+    }).map(item => toView(item));
 
-    let counter = 0;
+    const startX = Math.floor(Math.max(bounding[0].x, 0));
+    const startY = Math.floor(Math.max(bounding[0].y, 0));
 
-    for (let i = bounding[0].x; i <= bounding[1].x; i++) {
-        for (let j = bounding[0].y; j <= bounding[1].y; j++) {
-            const [x, y] = matrixMulVec(invertTMatrix, [i, j, 1]);
+    const endX = Math.ceil(Math.min(bounding[1].x, screenSize.x));
+    const endY = Math.ceil(Math.min(bounding[1].y, screenSize.y));
+
+    const stepsX = (endX - startX) / z;
+    const stepsY = (endY - startY) / z;
+
+    const worldStart = toWorld(new Vector(startX, startY));
+
+    for (let i = 0; i < stepsX; i++) {
+        for (let j = 0; j < stepsY; j++) {
+            const worldX = worldStart.x + i;
+            const worldY = worldStart.y + j;
+
+            let [x, y] = matrix3x3MulVec(invertTMatrix, [worldX, worldY, 1]);
             if (!virtualCanvas.check(x, y)) continue;
-            counter++;
-            drawRealPixel(i, j);
+
+            const viewX = startX + i * z;
+            const viewY = startY + j * z;
+
+            ctx.fillRect(viewX, viewY, z, z);
         }
     }
 
-    console.log(counter);
 }
 
 function useTransform(x: number, y: number) {
-    [x, y] = matrixMulVec(tMatrix, [x, y, 1]);
+    [x, y] = matrix3x3MulVec(tMatrix, [x, y, 1]);
     return new Vector(x, y);
 }
 
@@ -243,18 +261,6 @@ function updateTMatrix() {
 
 function drawVirtualPixel(x: number, y: number) {
     virtualCanvas.setPixel(x + charStart, y, true);
-}
-
-function drawRealPixel(x: number, y: number) {
-    const z = options.worldZoom;
-
-    ({ x, y } = toView(new Vector(x, y)));
-
-    if (x < -z || y < -z || x > screenSize.x || y > screenSize.y) {
-        return;
-    }
-
-    ctx.fillRect(x, y, z, z);
 }
 
 function drawAllGrids() {
@@ -386,8 +392,10 @@ function font2CharMap(font: Font) {
 function initGui() {
     gui.addColor(options, 'color');
     gui.add(options, 'text');
-    gui.add(options, 'zoomX', 0.1, 10, 0.1).onChange(() => updateTMatrix());
-    gui.add(options, 'zoomY', 0.1, 10, 0.1).onChange(() => updateTMatrix());
+    gui.add(options, 'zoomX', 0.1, 3, 0.1).onChange(updateTMatrix());
+    gui.add(options, 'zoomY', 0.1, 3, 0.1).onChange(updateTMatrix());
+    gui.add(options, 'translateX', 0.1, 3, 0.1).onChange(updateTMatrix());
+    gui.add(options, 'translateY', 0.1, 3, 0.1).onChange(updateTMatrix());
     gui.add(options, 'worldZoom', 0.05, 50, 0.05)
     gui.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
     gui.add(options, 'resetWorldCoords');
