@@ -11,7 +11,7 @@ import matrixMulMatrix from './scripts/matrix/matrixMulMatrix';
 import matrix3x3MulVec from './scripts/matrix/matrix3x3MulVec';
 import VirtualCanvas from './scripts/VirtualCanvas';
 
-import { scale, translate } from './affine';
+import { scale, translate, reflection, rotate, shear } from './affine';
 import invert3x3Matrix from './scripts/matrix/invert3x3Matrix';
 
 type Line = [number, number, number, number];
@@ -54,10 +54,17 @@ const options = {
     text: 'A5',
     letterSpacing: 0.8,
     worldZoom: 3,
-    zoomX: 1,
-    zoomY: 1,
+
     translateX: 0,
     translateY: 0,
+    zoomX: 1,
+    zoomY: 1,
+    shearX: 0,
+    shearY: 0,
+    deg: 0,
+    reflectX: false,
+    reflectY: false,
+
     noGaps: false,
     resetWorldCoords: () => {
         coords = initialCoords.copy();
@@ -78,6 +85,10 @@ let invertTMatrix: number[][];
 
 const virtualCanvas = new VirtualCanvas();
 let charStart = 0;
+
+(<any>window).set = (m) => {
+    tMatrix = m;
+}
 
 resize();
 updateTMatrix();
@@ -146,6 +157,22 @@ function initEvents() {
     window.addEventListener('load', () => {
         resize();
     });
+}
+
+function updateTMatrix() {
+    const rawTMatrixes = [
+        scale(options.zoomX, options.zoomY),
+        reflection(options.reflectX, options.reflectY),
+        rotate(options.deg),
+        shear(options.shearX, options.shearY),
+        translate(options.translateX, options.translateY),
+    ];
+
+    tMatrix = rawTMatrixes.reduceRight((prev, cur) => {
+        return matrixMulMatrix(prev, cur);
+    });
+
+    (<any>window).tm = tMatrix;
 }
 
 
@@ -241,19 +268,6 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
 
         drawPixel(x, y);
     }
-}
-
-function updateTMatrix() {
-    const rawTMatrixes = [
-        translate(options.translateX, options.translateY),
-        scale(options.zoomX, options.zoomY),
-    ];
-
-    tMatrix = rawTMatrixes.reduceRight((prev, cur) => {
-        return matrixMulMatrix(prev, cur);
-    });
-
-    (<any>window).tm = tMatrix;
 }
 
 function drawPixel(x: number, y: number) {
@@ -396,10 +410,15 @@ function font2CharMap(font: Font) {
 function initGui() {
     gui.addColor(options, 'color');
     gui.add(options, 'text');
-    gui.add(options, 'zoomX', 0.1, 3, 0.1).onChange(updateTMatrix);
-    gui.add(options, 'zoomY', 0.1, 3, 0.1).onChange(updateTMatrix);
     gui.add(options, 'translateX', -500, 500, 1).onChange(updateTMatrix);
     gui.add(options, 'translateY', -500, 500, 1).onChange(updateTMatrix);
+    gui.add(options, 'zoomX', 0.1, 3, 0.1).onChange(updateTMatrix);
+    gui.add(options, 'zoomY', 0.1, 3, 0.1).onChange(updateTMatrix);
+    gui.add(options, 'shearX', 0, 3, 0.1).onChange(updateTMatrix);
+    gui.add(options, 'shearY', 0, 3, 0.1).onChange(updateTMatrix);
+    gui.add(options, 'deg', 0, Math.PI * 2, 0.01).onChange(updateTMatrix);
+    gui.add(options, 'reflectX').onChange(updateTMatrix);
+    gui.add(options, 'reflectY').onChange(updateTMatrix);
     gui.add(options, 'noGaps');
     gui.add(options, 'worldZoom', 0.05, 50, 0.05)
     gui.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
