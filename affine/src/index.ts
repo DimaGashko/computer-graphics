@@ -33,6 +33,7 @@ const $: {
 
 $.root = document.querySelector('.app');
 $.canvas = $.root.querySelector('.app__canvas');
+$.tCenter = $.root.querySelector('.app__t-center');
 
 const ctx = $.canvas.getContext('2d');
 const gui = new dat.GUI();
@@ -65,7 +66,10 @@ const options = {
     reflectX: false,
     reflectY: false,
 
-    noGaps: true,
+    tCenterX: 0,
+    tCenterY: 0,
+
+    noGaps: false,
     resetWorldCoords: () => {
         coords = initialCoords.copy();
     }
@@ -86,7 +90,7 @@ let invertTMatrix: number[][];
 const virtualCanvas = new VirtualCanvas();
 let charStart = 0;
 
-(<any>window).set = (m) => {
+(<any>window).set = (m: number[][]) => {
     tMatrix = m;
 }
 
@@ -114,6 +118,7 @@ function drawFrame() {
     clear();
     drawAllGrids();
     draw();
+    moveTCenter();
 
     ctx.restore();
 }
@@ -161,9 +166,9 @@ function initEvents() {
 
 function updateTMatrix() {
     const rawTMatrixes = [
+        rotate(options.deg),
         scale(options.zoomX, options.zoomY),
         reflection(options.reflectX, options.reflectY),
-        rotate(options.deg),
         shear(options.shearX, options.shearY),
         translate(options.translateX, options.translateY),
     ];
@@ -187,7 +192,7 @@ function draw() {
 
     const step = Math.min(z ^ 0, 1);
     const steps = end.sub(start).div(new Vector(step, step));
-    
+
     for (let i = 0; i < steps.x; i++) {
         for (let j = 0; j < steps.y; j++) {
             const viewX = start.x + i * step;
@@ -263,10 +268,17 @@ function drawPixel(x: number, y: number) {
     if (options.noGaps) {
         virtualCanvas.setPixel(x + charStart ^ 0, y, true);
     } else {
-        [x, y] = matrix3x3MulVec(tMatrix, [x + charStart ^ 0, y, 1]);
+        x = x + charStart + options.tCenterX;
+        y = y + options.tCenterY;
+
+        [x, y] = matrix3x3MulVec(tMatrix, [x, y, 1]);
+
+        x -= options.tCenterX;
+        y -= options.tCenterY;
+
         ({ x, y } = toView(new Vector(x, y)));
         const z = options.worldZoom;
-        ctx.fillRect(x, y, z, z);
+        ctx.fillRect(x ^ 0, y ^ 0, z, z);
     }
 }
 
@@ -356,6 +368,10 @@ function useKeyboard() {
     if (pressedKeys[KEYS['bottom']]) coords.y += step;
 }
 
+function moveTCenter() {
+
+}
+
 function initStyles() {
     ctx.fillStyle = options.color;
 }
@@ -418,6 +434,10 @@ function initGui() {
     other.add(options, 'shearY', 0, 3, 0.1).onChange(updateTMatrix);
     other.add(options, 'reflectX').onChange(updateTMatrix);
     other.add(options, 'reflectY').onChange(updateTMatrix);
+
+    const tCenter = gui.addFolder('Transformation Center');
+    tCenter.add(options, 'tCenterX', -500, 500, 0.1);
+    tCenter.add(options, 'tCenterY', -500, 500, 0.1);
 
     setup.open();
     base.open();
