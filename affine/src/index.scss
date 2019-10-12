@@ -41,12 +41,12 @@ body {
 .app__real-img-canvas {
     position: absolute;
     bottom: 0;
-    right: 0;
+    left: 0;
 
     background: rgba(#212121, .9);
     padding: 10px;
 
-    transform-origin: right bottom;
+    transform-origin: left bottom;
 
     image-rendering: optimizeSpeed;             
     image-rendering: -moz-crisp-edges;          

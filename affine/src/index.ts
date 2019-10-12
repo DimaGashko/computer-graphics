@@ -190,37 +190,67 @@ function draw() {
 
 function inverseDraw() {
     const z = options.worldZoom;
-/*
-    const bounding = virtualCanvas.getBounding().map(({ x, y }) => {
-        [x, y] = matrix3x3MulVec(tMatrix, [x, y, 1]);
-        return new Vector(x, y);
-    }).map(item => toView(item));
 
-    const startX = Math.floor(Math.max(bounding[0].x - 1000, 0));
-    const startY = Math.floor(Math.max(bounding[0].y - 1000, 0));
+    const min = toWorld(new Vector(0, 0));
+    const max = toWorld(screenSize);
 
-    const endX = Math.ceil(Math.min(bounding[1].x + 10000, screenSize.x));
-    const endY = Math.ceil(Math.min(bounding[1].y + 10000, screenSize.y));
+    const start = new Vector(0, 0);
+    const end = rCanvasSize.copy();
 
-    const stepsX = (endX - startX) / z;
-    const stepsY = (endY - startY) / z;
+    start.x = Math.max(start.x, min.x) ^ 0;
+    start.y = Math.max(start.y, min.y) ^ 0;
 
-    const worldStart = toWorld(new Vector(startX, startY));
+    end.x = Math.min(end.x, max.x) ^ 0;
+    end.y = Math.min(end.y, max.y) ^ 0;
 
-    for (let i = 0; i < stepsX; i++) {
-        for (let j = 0; j < stepsY; j++) {
-            const worldX = worldStart.x + i;
-            const worldY = worldStart.y + j;
+    const steps = end.sub(start);
 
-            let [x, y] = matrix3x3MulVec(invertTMatrix, [worldX, worldY, 1]);
-            if (!virtualCanvas.check(x, y)) continue;
+    const viewStart = toView(start);
+    viewStart.x = viewStart.x ^ 0;
+    viewStart.y = viewStart.y ^ 0;
 
-            const viewX = startX + i * z;
-            const viewY = startY + j * z;
+    let c = 0;
+    for (let i = 0; i <= steps.x; i++) {
+        for (let j = 0; j <= steps.y; j++) {
+            
 
-            ctx.fillRect(viewX, viewY, z, z);
+            ctx.fillRect(viewStart.x + i * z, viewStart.y + j * z, z, z);
+
+            c++;
         }
-    }*/
+    }
+    console.log(c);
+    /*
+        const bounding = virtualCanvas.getBounding().map(({ x, y }) => {
+            [x, y] = matrix3x3MulVec(tMatrix, [x, y, 1]);
+            return new Vector(x, y);
+        }).map(item => toView(item));
+    
+        const startX = Math.floor(Math.max(bounding[0].x - 1000, 0));
+        const startY = Math.floor(Math.max(bounding[0].y - 1000, 0));
+    
+        const endX = Math.ceil(Math.min(bounding[1].x + 10000, screenSize.x));
+        const endY = Math.ceil(Math.min(bounding[1].y + 10000, screenSize.y));
+    
+        const stepsX = (endX - startX) / z;
+        const stepsY = (endY - startY) / z;
+    
+        const worldStart = toWorld(new Vector(startX, startY));
+    
+        for (let i = 0; i < stepsX; i++) {
+            for (let j = 0; j < stepsY; j++) {
+                const worldX = worldStart.x + i;
+                const worldY = worldStart.y + j;
+    
+                let [x, y] = matrix3x3MulVec(invertTMatrix, [worldX, worldY, 1]);
+                if (!virtualCanvas.check(x, y)) continue;
+    
+                const viewX = startX + i * z;
+                const viewY = startY + j * z;
+    
+                ctx.fillRect(viewX, viewY, z, z);
+            }
+        }*/
 }
 
 function drawText(text: string) {
@@ -280,7 +310,14 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
 
 function drawPixel(x: number, y: number) {
     if (options.noGaps) {
-        rCtx.fillRect((x + charStart) ^ 0, y ^ 0, 1, 1);
+        x = (x + charStart) ^ 0;
+        y = y ^ 0;
+
+        if (x < 0 || y < 0 || x > rCanvasSize.x || y > rCanvasSize.y) {
+            return;
+        }
+
+        rCtx.fillRect(x, y, 1, 1);
     } else {
         [x, y] = matrix3x3MulVec(tMatrix, [x + charStart, y, 1]);
         ({ x, y } = toView(new Vector(x, y)));
@@ -375,6 +412,10 @@ function useKeyboard() {
     if (pressedKeys[KEYS['bottom']]) coords.y += step;
 }
 
+function updateGapsType() {
+    $.realImgCanvas.hidden = !options.noGaps;
+}
+
 function initStyles() {
     ctx.fillStyle = options.color;
     rCtx.fillStyle = options.color;
@@ -401,6 +442,9 @@ function updateRCanvas() {
 
     rCanvasSize.x = len * size + (options.letterSpacing - 1) * (len - 1) * size;
     rCanvasSize.y = size * 1.1;
+
+    rCanvasSize.x = Math.min(rCanvasSize.x, screenSize.x);
+    rCanvasSize.y = Math.min(rCanvasSize.y, screenSize.y);
 
     $.realImgCanvas.width = rCanvasSize.x;
     $.realImgCanvas.height = rCanvasSize.y;
@@ -434,7 +478,7 @@ function initGui() {
     setup.addColor(options, 'color');
     setup.add(options, 'text');
     setup.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
-    setup.add(options, 'noGaps');
+    setup.add(options, 'noGaps').onChange(updateGapsType);
     setup.add(options, 'resetWorldCoords');
 
     const base = gui.addFolder('Base Transformations');
