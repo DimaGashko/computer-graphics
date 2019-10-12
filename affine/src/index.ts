@@ -214,7 +214,14 @@ function draw() {
 
             let { x, y } = toWorld(new Vector(viewX, viewY));
 
+            x -= options.tCenterX;
+            y -= options.tCenterY;
+
             [x, y] = matrix3x3MulVec(invertTMatrix, [x, y, 1]);
+
+            x += options.tCenterX;
+            y += options.tCenterY;
+
             if (!virtualCanvas.check(x, y)) continue;
 
             ctx.fillRect(viewX, viewY, z, z);
