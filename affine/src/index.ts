@@ -65,7 +65,7 @@ const options = {
     reflectX: false,
     reflectY: false,
 
-    noGaps: false,
+    noGaps: true,
     resetWorldCoords: () => {
         coords = initialCoords.copy();
     }
@@ -187,11 +187,11 @@ function draw() {
         return new Vector(x, y);
     }).map(item => toView(item));
 
-    const startX = Math.floor(Math.max(bounding[0].x, 0));
-    const startY = Math.floor(Math.max(bounding[0].y, 0));
+    const startX = Math.floor(Math.max(bounding[0].x-1000, 0));
+    const startY = Math.floor(Math.max(bounding[0].y-1000, 0));
 
-    const endX = Math.ceil(Math.min(bounding[1].x, screenSize.x));
-    const endY = Math.ceil(Math.min(bounding[1].y, screenSize.y));
+    const endX = Math.ceil(Math.min(bounding[1].x+10000, screenSize.x));
+    const endY = Math.ceil(Math.min(bounding[1].y+10000, screenSize.y));
 
     const stepsX = (endX - startX) / z;
     const stepsY = (endY - startY) / z;
@@ -408,19 +408,28 @@ function font2CharMap(font: Font) {
 }
 
 function initGui() {
-    gui.addColor(options, 'color');
-    gui.add(options, 'text');
-    gui.add(options, 'translateX', -500, 500, 1).onChange(updateTMatrix);
-    gui.add(options, 'translateY', -500, 500, 1).onChange(updateTMatrix);
-    gui.add(options, 'zoomX', 0.1, 3, 0.1).onChange(updateTMatrix);
-    gui.add(options, 'zoomY', 0.1, 3, 0.1).onChange(updateTMatrix);
-    gui.add(options, 'shearX', 0, 3, 0.1).onChange(updateTMatrix);
-    gui.add(options, 'shearY', 0, 3, 0.1).onChange(updateTMatrix);
-    gui.add(options, 'deg', 0, Math.PI * 2, 0.01).onChange(updateTMatrix);
-    gui.add(options, 'reflectX').onChange(updateTMatrix);
-    gui.add(options, 'reflectY').onChange(updateTMatrix);
-    gui.add(options, 'noGaps');
-    gui.add(options, 'worldZoom', 0.05, 50, 0.05)
-    gui.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
-    gui.add(options, 'resetWorldCoords');
+    const setup = gui.addFolder('Setup');
+
+    setup.addColor(options, 'color');
+    setup.add(options, 'text');
+    setup.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
+    setup.add(options, 'noGaps');
+    setup.add(options, 'resetWorldCoords');
+
+    const base = gui.addFolder('Base Transformations');
+    base.add(options, 'worldZoom', 0.05, 50, 0.05)
+    base.add(options, 'zoomX', 0.1, 3, 0.1).onChange(updateTMatrix);
+    base.add(options, 'zoomY', 0.1, 3, 0.1).onChange(updateTMatrix);
+    base.add(options, 'deg', 0, Math.PI * 2, 0.01).onChange(updateTMatrix);
+
+    const other = gui.addFolder('Additional Transformations');
+    other.add(options, 'translateX', -500, 500, 1).onChange(updateTMatrix);
+    other.add(options, 'translateY', -500, 500, 1).onChange(updateTMatrix);
+    other.add(options, 'shearX', 0, 3, 0.1).onChange(updateTMatrix);
+    other.add(options, 'shearY', 0, 3, 0.1).onChange(updateTMatrix);
+    other.add(options, 'reflectX').onChange(updateTMatrix);
+    other.add(options, 'reflectY').onChange(updateTMatrix);
+
+    setup.open();
+    base.open();
 }
