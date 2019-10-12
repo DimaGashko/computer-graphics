@@ -180,11 +180,11 @@ function initTCenterEvents() {
 
 function updateTMatrix() {
     const rawTMatrixes = [
-        rotate(options.deg),
-        scale(options.zoomX, options.zoomY),
+        translate(options.translateX, options.translateY),
         reflection(options.reflectX, options.reflectY),
         shear(options.shearX, options.shearY),
-        translate(options.translateX, options.translateY),
+        scale(options.zoomX, options.zoomY),
+        rotate(options.deg),
     ];
 
     tMatrix = rawTMatrixes.reduceRight((prev, cur) => {
@@ -457,7 +457,7 @@ function initGui() {
     setup.add(options, 'noGaps');
     setup.add(options, 'resetWorldCoords');
 
-    const base = gui.addFolder('Base Transformations');
+    const base = gui.addFolder('Main Transformations');
     base.add(options, 'worldZoom', 0.05, 50, 0.05)
     base.add(options, 'zoomX', 0.1, 3, 0.1).onChange(updateTMatrix);
     base.add(options, 'zoomY', 0.1, 3, 0.1).onChange(updateTMatrix);
