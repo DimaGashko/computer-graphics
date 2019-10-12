@@ -147,11 +147,11 @@ function initEvents() {
         options.worldZoom = Math.min(Math.max(cur + delta, 0.05), 50);
     }));
 
-    $.canvas.addEventListener('keydown', ({ keyCode }) => {
+    $.root.addEventListener('keydown', ({ keyCode }) => {
         pressedKeys[keyCode] = true;
     });
 
-    $.canvas.addEventListener('keyup', ({ keyCode }) => {
+    $.root.addEventListener('keyup', ({ keyCode }) => {
         pressedKeys[keyCode] = false;
     });
 
@@ -161,6 +161,20 @@ function initEvents() {
 
     window.addEventListener('load', () => {
         resize();
+    });
+
+    initTCenterEvents();
+}
+
+function initTCenterEvents() { 
+    const hammer = new Hammer($.tCenter);
+    hammer.get('pinch').set({ enable: true });
+
+    hammer.on('pan panstart', ({ center }) => {
+        const pos = toWorld(new Vector(center.x, center.y));
+        
+        options.tCenterX = pos.x;
+        options.tCenterY = pos.y;
     });
 }
 
@@ -268,13 +282,13 @@ function drawPixel(x: number, y: number) {
     if (options.noGaps) {
         virtualCanvas.setPixel(x + charStart ^ 0, y, true);
     } else {
-        x = x + charStart + options.tCenterX;
-        y = y + options.tCenterY;
+        x = x + charStart + -options.tCenterX;
+        y = y + -options.tCenterY;
 
         [x, y] = matrix3x3MulVec(tMatrix, [x, y, 1]);
 
-        x -= options.tCenterX;
-        y -= options.tCenterY;
+        x += options.tCenterX;
+        y += options.tCenterY;
 
         ({ x, y } = toView(new Vector(x, y)));
         const z = options.worldZoom;
@@ -362,14 +376,29 @@ function toView(targetCoords: Vector) {
 function useKeyboard() {
     const step = 8;
 
-    if (pressedKeys[KEYS['left']]) coords.x -= step;
-    if (pressedKeys[KEYS['top']]) coords.y -= step;
-    if (pressedKeys[KEYS['right']]) coords.x += step;
-    if (pressedKeys[KEYS['bottom']]) coords.y += step;
+    const type = (document.activeElement === $.tCenter)
+        ? 'tCenter' : 'coords';
+    
+    const targ = (type === 'coords')
+        ? coords : new Vector(options.tCenterX, options.tCenterY);
+
+    if (pressedKeys[KEYS['left']]) targ.x -= step;
+    if (pressedKeys[KEYS['top']]) targ.y -= step;
+    if (pressedKeys[KEYS['right']]) targ.x += step;
+    if (pressedKeys[KEYS['bottom']]) targ.y += step;
+
+    if (type === 'coords') {
+        coords = targ;
+    } else {
+        options.tCenterX = targ.x;
+        options.tCenterY = targ.y;
+    }
 }
 
 function moveTCenter() {
-
+    const pos = toView(new Vector(options.tCenterX, options.tCenterY));
+    $.tCenter.style.left = `${pos.x}px`;
+    $.tCenter.style.top = `${pos.y}px`;
 }
 
 function initStyles() {
@@ -430,8 +459,8 @@ function initGui() {
     const other = gui.addFolder('Additional Transformations');
     other.add(options, 'translateX', -500, 500, 1).onChange(updateTMatrix);
     other.add(options, 'translateY', -500, 500, 1).onChange(updateTMatrix);
-    other.add(options, 'shearX', 0, 3, 0.1).onChange(updateTMatrix);
-    other.add(options, 'shearY', 0, 3, 0.1).onChange(updateTMatrix);
+    other.add(options, 'shearX', -3, 3, 0.1).onChange(updateTMatrix);
+    other.add(options, 'shearY', -3, 3, 0.1).onChange(updateTMatrix);
     other.add(options, 'reflectX').onChange(updateTMatrix);
     other.add(options, 'reflectY').onChange(updateTMatrix);
 
