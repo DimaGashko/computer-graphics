@@ -9,7 +9,6 @@ import _font from './font';
 import Vector from './scripts/Vector';
 import matrixMulMatrix from './scripts/matrix/matrixMulMatrix';
 import matrix3x3MulVec from './scripts/matrix/matrix3x3MulVec';
-import VirtualCanvas from './scripts/VirtualCanvas';
 
 import { scale, translate, reflection, rotate, shear } from './affine';
 import invert3x3Matrix from './scripts/matrix/invert3x3Matrix';
@@ -28,13 +27,16 @@ interface Font {
 
 const $: {
     canvas?: HTMLCanvasElement,
+    realImgCanvas?: HTMLCanvasElement,
     [type: string]: HTMLElement
 } = {};
 
 $.root = document.querySelector('.app');
 $.canvas = $.root.querySelector('.app__canvas');
+$.realImgCanvas = document.createElement('canvas');
 
 const ctx = $.canvas.getContext('2d');
+const rCtx = $.realImgCanvas.getContext('2d');
 const gui = new dat.GUI();
 
 const pressedKeys: { [keycode: string]: boolean } = {}
@@ -72,6 +74,7 @@ const options = {
 }
 
 const screenSize = new Vector(0, 0);
+const rCanvasSize = new Vector(0, 0);
 const initialCoords = new Vector(50, 50);
 let coords = initialCoords.copy();
 
@@ -83,7 +86,6 @@ let tMatrix = [
 
 let invertTMatrix: number[][];
 
-const virtualCanvas = new VirtualCanvas();
 let charStart = 0;
 
 (<any>window).set = (m) => {
@@ -113,6 +115,7 @@ function drawFrame() {
 
     clear();
     drawAllGrids();
+    updateRCanvas();
     draw();
 
     ctx.restore();
@@ -178,20 +181,26 @@ function updateTMatrix() {
 
 function draw() {
     drawText(options.text.toUpperCase());
-    if (!options.noGaps) return;
 
+    if (options.noGaps) {
+        inverseDraw();
+    }
+
+}
+
+function inverseDraw() {
     const z = options.worldZoom;
-
+/*
     const bounding = virtualCanvas.getBounding().map(({ x, y }) => {
         [x, y] = matrix3x3MulVec(tMatrix, [x, y, 1]);
         return new Vector(x, y);
     }).map(item => toView(item));
 
-    const startX = Math.floor(Math.max(bounding[0].x-1000, 0));
-    const startY = Math.floor(Math.max(bounding[0].y-1000, 0));
+    const startX = Math.floor(Math.max(bounding[0].x - 1000, 0));
+    const startY = Math.floor(Math.max(bounding[0].y - 1000, 0));
 
-    const endX = Math.ceil(Math.min(bounding[1].x+10000, screenSize.x));
-    const endY = Math.ceil(Math.min(bounding[1].y+10000, screenSize.y));
+    const endX = Math.ceil(Math.min(bounding[1].x + 10000, screenSize.x));
+    const endY = Math.ceil(Math.min(bounding[1].y + 10000, screenSize.y));
 
     const stepsX = (endX - startX) / z;
     const stepsY = (endY - startY) / z;
@@ -211,8 +220,7 @@ function draw() {
 
             ctx.fillRect(viewX, viewY, z, z);
         }
-    }
-
+    }*/
 }
 
 function drawText(text: string) {
@@ -272,7 +280,8 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
 
 function drawPixel(x: number, y: number) {
     if (options.noGaps) {
-        virtualCanvas.setPixel(x + charStart, y, true);
+        ({ x, y } = toView(new Vector(x, y)));
+        rCtx.fillRect(x ^ 0, y ^ 0, 1, 1);
     } else {
         [x, y] = matrix3x3MulVec(tMatrix, [x + charStart, y, 1]);
         ({ x, y } = toView(new Vector(x, y)));
@@ -386,12 +395,23 @@ function updateCanvasSize() {
     $.canvas.height = screenSize.y;
 }
 
+function updateRCanvas() {
+    const len = options.text.length;
+
+    rCanvasSize.x = font.size * (2 * len - 1);
+    rCanvasSize.y = font.size;
+
+    $.realImgCanvas.width = rCanvasSize.x;
+    $.realImgCanvas.height = rCanvasSize.y;
+
+    rCtx.clearRect(0, 0, rCanvasSize.x, rCanvasSize.y);
+}
+
 function clearCanvas() {
     ctx.clearRect(0, 0, screenSize.x, screenSize.y);
 }
 
 function clear() {
-    virtualCanvas.clear();
     charStart = 0;
 
     invertTMatrix = invert3x3Matrix(tMatrix);
