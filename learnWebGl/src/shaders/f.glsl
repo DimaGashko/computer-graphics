@@ -5,5 +5,10 @@ uniform vec4 color;
 uniform float time;
 
 void main() {
-  gl_FragColor = vec4(1.0, color[1], color[2], color[3]);
+  gl_FragColor = vec4(
+    sin(color[0] * time),
+    cos(color[1] * time),
+    sin(color[2] * time), 
+    color[3]
+  );
 }

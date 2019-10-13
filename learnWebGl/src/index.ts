@@ -73,13 +73,15 @@ function drawFrame() {
     gl.vertexAttribPointer(locations.aPosition, 2, gl.FLOAT, false, 0, 0);
 
     gl.uniform2f(locations.resolution, gl.canvas.width, gl.canvas.height);
-    gl.uniform1f(locations.time, Date.now() / 100);
+    gl.uniform1f(locations.time, performance.now() / 1000);
 
-    for (var i = 0; i < 100; i++) {
-        setRectangle(gl, i * 10, i * 5, i * 5, i * 3);
-        gl.uniform4f(locations.color, Math.random(), Math.random(), Math.random(), 1);
-        gl.drawArrays(gl.TRIANGLES, 0, 6);
-    }
+    setRectangle(gl, 200, 100, 200, 400);
+    gl.uniform4f(locations.color, 1, 0, 0, 1);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+    setRectangle(gl, 500, 150, 500, 300);
+    gl.uniform4f(locations.color, 1, 1, 0, 1);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 
 function rand(range) {
