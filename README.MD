@@ -4,6 +4,7 @@
 
 - Source: [affine](./affine)
 - Link: https://js-coder.tk/computer-graphics/affine/
+- YouTube: https://youtu.be/w21uZKaBTic
 
 ![The Affine Example](./affine/src/assets/affine.png)
 
