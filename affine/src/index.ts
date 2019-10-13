@@ -116,7 +116,6 @@ function drawFrame() {
 
     if (options.noGaps) {
         options.worldZoom = Math.max(options.worldZoom, 1);
-        console.log(options.worldZoom);
     }
 
     initStyles();

@@ -5,7 +5,7 @@
 - Source: [affine](./affine)
 - Link: https://js-coder.tk/computer-graphics/affine/
 
-(in progress)
+![The Affine Example](./affine/src/assets/affine.png)
 
 ## Bresenham's line Algorithm
 

@@ -2,21 +2,28 @@
 
 Check it out: http://js-coder.tk/computer-graphics/affine/
 
-![The Bresenham Example](./src/assets/affine.png)
+![The Example](./src/assets/affine.png)
 
-In this Bresenham's line Algorithm demo you can write you own text and we draw it by the bresenham algorithm (unfortunately only 3 characters in our font now, but you can send a pull request, just edit the [font](./src/font.json)). 
+In this demo you can write your own text and we draw it by the Bresenham's line algorithm (unfortunately only 3 characters in our font now, but you can send a pull request, just edit the [font](./src/font.json)).
 
-After that you can move your text, rotate and scale it.
+And then you can use some affine transformations like translate, rotate, scale, shear and reflect.
+You can move and zoom the 'world' too.
+
+All transformations (excluded worlds zoom and translate) provide by matrixes [font](./src/affine.ts)
 
 ## Features
 
-- Zoom
+- Available transformations: zoom, scale, shear, translate and reflet
+- noGaps options provide better quality for transformations (no gaps between pixels after transformations)
+- Select transformations center
+- World Zoom and Drag & drop
 - Available Symbols: A, D, 5
 - Default symbol for unknown
 - Change letter spacing
 - Change color of chars
-- Drag & drop
-- Mobile supports
+- Touch screen supports
+- Accessibility (particle)
+- Multi level grid on world zoom
 
 ## Lang & techs
 
@@ -38,15 +45,9 @@ In this demo font is just array of lines
 ## Build
 
 ```console
-yarn
-yarn start
-yarn build
-```
-
-or
-
-```console
 npm i
 npm start
 npm run build
 ```
+
+p.s. use yarn if you want to contribute to this repo

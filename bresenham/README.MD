@@ -4,7 +4,7 @@ Check it out: https://js-coder.tk/computer-graphics/bresenham/
 
 ![The Bresenham Example](./src/assets/bresenham.png)
 
-In this Bresenham's line Algorithm demo you can write you own text and we draw it by the algorithm (unfortunately only 3 characters in our font now, but you can send a pull request, just edit the [font](./src/font.json))
+In this Bresenham's line Algorithm demo you can write your own text and we draw it by the algorithm (unfortunately only 3 characters in our font now, but you can send a pull request, just edit the [font](./src/font.json))
 
 ## Features
 
