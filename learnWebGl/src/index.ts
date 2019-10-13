@@ -8,6 +8,7 @@ import * as dat from 'dat.gui';
 import vShaderSource from './shaders/v.glsl';
 import fShaderSource from './shaders/f.glsl';
 import Vector from '../../affine/src/scripts/Vector';
+import { createShader, createProgram } from './scripts/webGlUtils';
 
 const $: {
     canvas?: HTMLCanvasElement,
@@ -28,12 +29,12 @@ const options = {
 }
 
 const positions = [
-    10, 20,
-    80, 20,
-    10, 30,
-    10, 30,
-    80, 20,
-    80, 30,
+    100, 200,
+    800, 200,
+    100, 300,
+    100, 300,
+    800, 200,
+    800, 300,
 ];
 
 const vShader = createShader(gl, gl.VERTEX_SHADER, vShaderSource);
@@ -79,35 +80,6 @@ function drawFrame() {
     gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
 
     gl.drawArrays(gl.TRIANGLES, 0, positions.length / 2);
-}
-
-function createProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader) {
-    const program = gl.createProgram();
-
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-
-    gl.linkProgram(program);
-
-    if (gl.getProgramParameter(program, gl.LINK_STATUS)) {
-        return program;
-    }
-
-    console.error(gl.getProgramInfoLog(program));
-    gl.deleteProgram(program);
-}
-
-function createShader(gl: WebGLRenderingContext, type: number, source: string) {
-    const shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-
-    if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        return shader;
-    }
-
-    console.error(gl.getShaderInfoLog(shader));
-    gl.deleteShader(shader);
 }
 
 function resize() { 
