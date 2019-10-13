@@ -5,6 +5,9 @@ import { throttle } from 'throttle-debounce';
 import Hammer from 'hammerjs';
 import * as dat from 'dat.gui';
 
+import vShaderSource from './shaders/v.glsl';
+import fShaderSource from './shaders/f.glsl';
+import Vector from '../../affine/src/scripts/Vector';
 
 const $: {
     canvas?: HTMLCanvasElement,
@@ -14,14 +17,102 @@ const $: {
 $.root = document.querySelector('.app');
 $.canvas = $.root.querySelector('.app__canvas');
 
-const ctx = $.canvas.getContext('2d');
+const screenSize = new Vector(0, 0);
+const canvasSize = new Vector(0, 0);
+
+const gl = $.canvas.getContext('webgl');
 const gui = new dat.GUI();
 
 const options = {
    
 }
 
+const positions = [
+    0, 0,
+    0, 0.5,
+    0.9, 0,
+];
 
+const vShader = createShader(gl, gl.VERTEX_SHADER, vShaderSource);
+const fShader = createShader(gl, gl.FRAGMENT_SHADER, fShaderSource);
+const program = createProgram(gl, vShader, fShader);
+
+const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+const positionBuffer = gl.createBuffer();
+
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+resize();
+start();
+
+function start() {
+    requestAnimationFrame(function tik() {
+        drawFrame();
+        requestAnimationFrame(tik);
+    });
+}
+
+function drawFrame() { 
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.useProgram(program);
+    gl.enableVertexAttribArray(positionAttributeLocation);
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+function createProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader) {
+    const program = gl.createProgram();
+
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+
+    gl.linkProgram(program);
+
+    if (gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        return program;
+    }
+
+    console.error(gl.getProgramInfoLog(program));
+    gl.deleteProgram(program);
+}
+
+function createShader(gl: WebGLRenderingContext, type: number, source: string) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+
+    if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        return shader;
+    }
+
+    console.error(gl.getShaderInfoLog(shader));
+    gl.deleteShader(shader);
+}
+
+function resize() { 
+    updateMetrics();
+    updateCanvasSize();
+}
+
+function updateCanvasSize() {
+    $.canvas.width = canvasSize.x;
+    $.canvas.height = canvasSize.y;
+
+    gl.viewport(0, 0, canvasSize.x, canvasSize.y);
+}
+
+function updateMetrics() {
+    screenSize.x = $.root.offsetWidth;
+    screenSize.y = $.root.offsetHeight;
+
+    canvasSize.x = Math.floor(screenSize.x * window.devicePixelRatio);
+    canvasSize.y = Math.floor(screenSize.y * window.devicePixelRatio);
+}
 
 
 function initGui() {
