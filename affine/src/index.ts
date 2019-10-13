@@ -90,6 +90,8 @@ let invertTMatrix: number[][];
 const virtualCanvas = new VirtualCanvas();
 let charStart = 0;
 
+let maxLen = 25;
+
 (<any>window).set = (m: number[][]) => {
     tMatrix = m;
 }
@@ -111,6 +113,11 @@ function start() {
 
 function drawFrame() {
     ctx.save();
+
+    if (options.noGaps) {
+        options.worldZoom = Math.max(options.worldZoom, 1);
+        console.log(options.worldZoom);
+    }
 
     initStyles();
     useKeyboard();
@@ -196,7 +203,7 @@ function updateTMatrix() {
 
 
 function draw() {
-    drawText(options.text.toUpperCase());
+    drawText(options.text.slice(0, maxLen).toUpperCase());
     if (!options.noGaps) return;
 
     const z = options.worldZoom;
