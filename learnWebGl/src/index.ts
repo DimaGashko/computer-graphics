@@ -25,33 +25,28 @@ const gl = $.canvas.getContext('webgl');
 const gui = new dat.GUI();
 
 const options = {
-   
-}
 
-const positions = [
-    100, 200,
-    800, 200,
-    100, 300,
-    100, 300,
-    800, 200,
-    800, 300,
-];
+}
 
 const vShader = createShader(gl, gl.VERTEX_SHADER, vShaderSource);
 const fShader = createShader(gl, gl.FRAGMENT_SHADER, fShaderSource);
 const program = createProgram(gl, vShader, fShader);
 
-const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
-const positionBuffer = gl.createBuffer();
+const locations = {
+    aPosition: gl.getAttribLocation(program, 'a_position'),
+    resolution: gl.getUniformLocation(program, 'resolution'),
+    color: gl.getUniformLocation(program, 'color'),
+    time: gl.getUniformLocation(program, 'time'),
+}
 
+const positionBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
 initEvents();
 resize();
 start();
 
-function initEvents() { 
+function initEvents() {
     window.addEventListener('resize', throttle(50, () => {
         resize();
     }));
@@ -68,21 +63,46 @@ function start() {
     });
 }
 
-function drawFrame() { 
+function drawFrame() {
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     gl.useProgram(program);
-    const resolutionUniLocation = gl.getUniformLocation(program, "u_resolution");
-    gl.uniform2f(resolutionUniLocation, gl.canvas.width, gl.canvas.height);
-    gl.enableVertexAttribArray(positionAttributeLocation);
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(locations.aPosition);
+    gl.vertexAttribPointer(locations.aPosition, 2, gl.FLOAT, false, 0, 0);
 
-    gl.drawArrays(gl.TRIANGLES, 0, positions.length / 2);
+    gl.uniform2f(locations.resolution, gl.canvas.width, gl.canvas.height);
+    gl.uniform1f(locations.time, Date.now() / 100);
+
+    for (var i = 0; i < 100; i++) {
+        setRectangle(gl, i * 10, i * 5, i * 5, i * 3);
+        gl.uniform4f(locations.color, Math.random(), Math.random(), Math.random(), 1);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
 }
 
-function resize() { 
+function rand(range) {
+    return Math.floor(Math.random() * range);
+}
+
+function setRectangle(gl, x, y, width, height) {
+    const x1 = x;
+    const x2 = x + width;
+    const y1 = y;
+    const y2 = y + height;
+
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        x1, y1,
+        x2, y1,
+        x1, y2,
+        x1, y2,
+        x2, y1,
+        x2, y2,
+    ]), gl.STATIC_DRAW);
+}
+
+function resize() {
     updateMetrics();
     updateCanvasSize();
 }
@@ -104,5 +124,5 @@ function updateMetrics() {
 
 
 function initGui() {
-   
+
 }
