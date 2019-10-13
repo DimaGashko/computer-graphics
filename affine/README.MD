@@ -1,6 +1,7 @@
 # Affine transformations
 
 Check it out: http://js-coder.tk/computer-graphics/affine/
+YouTube: https://youtu.be/w21uZKaBTic
 
 ![The Example](./src/assets/affine.png)
 
@@ -9,7 +10,7 @@ In this demo you can write your own text and we draw it by the Bresenham's line 
 And then you can use some affine transformations like translate, rotate, scale, shear and reflect.
 You can move and zoom the 'world' too.
 
-All transformations (excluded worlds zoom and translate) provide by matrixes [font](./src/affine.ts)
+All transformations (excluded worlds zoom and translate) provide by matrixes ([affine.ts](./src/affine.ts))
 
 ## Features
 
