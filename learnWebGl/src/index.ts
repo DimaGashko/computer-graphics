@@ -28,9 +28,12 @@ const options = {
 }
 
 const positions = [
-    0, 0,
-    0, 0.5,
-    0.9, 0,
+    10, 20,
+    80, 20,
+    10, 30,
+    10, 30,
+    80, 20,
+    80, 30,
 ];
 
 const vShader = createShader(gl, gl.VERTEX_SHADER, vShaderSource);
@@ -43,8 +46,19 @@ const positionBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
+initEvents();
 resize();
 start();
+
+function initEvents() { 
+    window.addEventListener('resize', throttle(50, () => {
+        resize();
+    }));
+
+    window.addEventListener('load', () => {
+        resize();
+    });
+}
 
 function start() {
     requestAnimationFrame(function tik() {
@@ -58,11 +72,13 @@ function drawFrame() {
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     gl.useProgram(program);
+    const resolutionUniLocation = gl.getUniformLocation(program, "u_resolution");
+    gl.uniform2f(resolutionUniLocation, gl.canvas.width, gl.canvas.height);
     gl.enableVertexAttribArray(positionAttributeLocation);
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
 
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.drawArrays(gl.TRIANGLES, 0, positions.length / 2);
 }
 
 function createProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader) {
