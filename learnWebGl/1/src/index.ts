@@ -7,7 +7,7 @@ import * as dat from 'dat.gui';
 
 import vShaderSource from './shaders/v.glsl';
 import fShaderSource from './shaders/f.glsl';
-import Vector from '../../affine/src/scripts/Vector';
+import Vector from '../src/scripts/Vector';
 import { createShader, createProgram } from './scripts/webGlUtils';
 
 const $: {
@@ -35,7 +35,6 @@ const program = createProgram(gl, vShader, fShader);
 const locations = {
     aPosition: gl.getAttribLocation(program, 'a_position'),
     resolution: gl.getUniformLocation(program, 'resolution'),
-    color: gl.getUniformLocation(program, 'color'),
     time: gl.getUniformLocation(program, 'time'),
 }
 
@@ -68,40 +67,24 @@ function drawFrame() {
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     gl.useProgram(program);
+
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.enableVertexAttribArray(locations.aPosition);
     gl.vertexAttribPointer(locations.aPosition, 2, gl.FLOAT, false, 0, 0);
 
     gl.uniform2f(locations.resolution, gl.canvas.width, gl.canvas.height);
     gl.uniform1f(locations.time, performance.now() / 1000);
-
-    setRectangle(gl, 200, 100, 200, 400);
-    gl.uniform4f(locations.color, 1, 0, 0, 1);
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-    setRectangle(gl, 500, 150, 500, 300);
-    gl.uniform4f(locations.color, 1, 1, 0, 1);
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
-}
-
-function rand(range) {
-    return Math.floor(Math.random() * range);
-}
-
-function setRectangle(gl, x, y, width, height) {
-    const x1 = x;
-    const x2 = x + width;
-    const y1 = y;
-    const y2 = y + height;
-
+    
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-        x1, y1,
-        x2, y1,
-        x1, y2,
-        x1, y2,
-        x2, y1,
-        x2, y2,
+        50, 50,
+        500, 100,
+        300, 300,
+        500, 500,
+        900, 600,
+        200, 200,
     ]), gl.STATIC_DRAW);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 
 function resize() {

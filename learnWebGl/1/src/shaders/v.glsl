@@ -11,10 +11,7 @@ varying vec4 c;
 void main() {
   vec2 clipSpace = ((a_position / resolution) * 2.0) - 1.0;
 
-  gl_Position = vec4(
-    clipSpace[0] + sin(time / clipSpace[1]),
-    clipSpace[1] + cos(time * clipSpace[1]),
-    0, 1);
+  gl_Position = vec4(clipSpace, 0, 1);
 
   c = gl_Position * 0.5 + 0.5;
 }
