@@ -13,5 +13,5 @@ void main() {
     cos(c[1] * time),
     sin(c[2] * time), 
     color[3]
-  ) + c2;
+  ) + c2.bgra;
 }
