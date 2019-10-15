@@ -2,27 +2,25 @@
 precision mediump float;
 
 uniform sampler2D image;
-uniform vec2 texSize
+uniform sampler2D image2;
+uniform vec2 texSize;
 uniform float time;
-uniform float kernel[9];
-uniform float kernelWeight;
 
 varying vec4 c;
 varying vec2 texCoord;
+//varying vec2 tex2Coord;
 
 void main() {
-  vec2 onePixel = vec2(1.0, 1.0) / u_textureSize;
+   vec4 c = texture2D(image, texCoord);
 
-  vec4 colorSum =
-     texture2D(image, texCoord + onePixel * vec2(-1, -1)) * u_kernel[0] +
-     texture2D(image, texCoord + onePixel * vec2( 0, -1)) * u_kernel[1] +
-     texture2D(image, texCoord + onePixel * vec2( 1, -1)) * u_kernel[2] +
-     texture2D(image, texCoord + onePixel * vec2(-1,  0)) * u_kernel[3] +
-     texture2D(image, texCoord + onePixel * vec2( 0,  0)) * u_kernel[4] +
-     texture2D(image, texCoord + onePixel * vec2( 1,  0)) * u_kernel[5] +
-     texture2D(image, texCoord + onePixel * vec2(-1,  1)) * u_kernel[6] +
-     texture2D(image, texCoord + onePixel * vec2( 0,  1)) * u_kernel[7] +
-     texture2D(image, texCoord + onePixel * vec2( 1,  1)) * u_kernel[8] ;
+   vec4 c2 = texture2D(image2, vec2(
+     texCoord.x + sin((texCoord.y * 2.0 + time) * 5.0) / 1000.0,
+     texCoord.y + cos(texCoord.x * 2.0 + time) / 20.0
+   ));
 
-  gl_FragColor = vec4((colorSum / u_kernelWeight).rgb, 1.0);
+   if (c2.a == 0.0) {
+     gl_FragColor = c;
+   } else {
+     gl_FragColor = vec4(c2.rgb, 1);
+   }
 }
