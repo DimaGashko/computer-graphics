@@ -70,3 +70,12 @@ export function makeReflect(cx: boolean, cy: boolean, cz: boolean) {
         0, 0, 0, 1,
     ];
 }
+
+export function makeProjection(width: number, height: number, depth: number) {
+    return [
+        2 / width, 0, 0, 0,
+        0, -2 / height, 0, 0,
+        0, 0, 2 / depth, 0,
+        -1, 1, 0, 1,
+    ];
+}

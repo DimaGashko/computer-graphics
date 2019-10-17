@@ -10,7 +10,7 @@ import Vector from '../src/scripts/Vector';
 import { createShader, createProgram } from './scripts/webGlUtils';
 import f from './geometries/f';
 import matMulMat4 from './scripts/math/matMulMat4';
-import { makeIdentity, makeTranslation, makeScale, makeShear, makeRotateX, makeRotateY, makeRotateZ, makeReflect } from './affine';
+import { makeIdentity, makeTranslation, makeScale, makeShear, makeRotateX, makeRotateY, makeRotateZ, makeReflect, makeProjection } from './affine';
 
 const $: {
     canvas?: HTMLCanvasElement,
@@ -156,41 +156,46 @@ function updateAffine() {
         translateX, translateY, translateZ,
     } = options;
 
-    rotateX(options.rotateX);
-    rotateY(options.rotateY);
-    rotateZ(options.rotateZ);
-    reflect(reflectX, reflectY, reflectZ);
-    scale(scaleX, scaleY, scaleZ);
-    shear(shearXY, shearYX, shearXZ, shearZX, shearYZ, shearZY);
-    translate(translateX, translateY, translateZ);
+    affine = rotateX(affine, options.rotateX);
+    affine = rotateY(affine, options.rotateY);
+    affine = rotateZ(affine, options.rotateZ);
+    affine = reflect(affine, reflectX, reflectY, reflectZ);
+    affine = scale(affine, scaleX, scaleY, scaleZ);
+    affine = shear(affine, shearXY, shearYX, shearXZ, shearZX, shearYZ, shearZY);
+    affine = translate(affine, translateX, translateY, translateZ);
+    affine = projection(affine, canvasSize.x, canvasSize.y, options.depth);
 }
 
-function translate(dx: number, dy: number, dz: number) {
-    affine = matMulMat4(makeTranslation(dx, dy, dz), affine);
+function translate(affine: number[], dx: number, dy: number, dz: number) {
+    return matMulMat4(makeTranslation(dx, dy, dz), affine);
 }
 
-function scale(cx: number, cy: number, cz: number) {
-    affine = matMulMat4(makeScale(cx, cy, cz), affine);
+function scale(affine: number[], cx: number, cy: number, cz: number) {
+    return matMulMat4(makeScale(cx, cy, cz), affine);
 }
 
-function shear(xy: number, yx: number, xz: number, zx: number, yz: number, zy: number) {
-    affine = matMulMat4(makeShear(xy, yx, xz, xz, yz, zy), affine);
+function shear(affine: number[], xy: number, yx: number, xz: number, zx: number, yz: number, zy: number) {
+    return matMulMat4(makeShear(xy, yx, xz, xz, yz, zy), affine);
 }
 
-function rotateX(deg: number) {
-    affine = matMulMat4(makeRotateX(deg), affine);
+function rotateX(affine: number[], deg: number) {
+    return matMulMat4(makeRotateX(deg), affine);
 }
 
-function rotateY(deg: number) {
-    affine = matMulMat4(makeRotateY(deg), affine);
+function rotateY(affine: number[], deg: number) {
+    return matMulMat4(makeRotateY(deg), affine);
 }
 
-function rotateZ(deg: number) {
-    affine = matMulMat4(makeRotateZ(deg), affine);
+function rotateZ(affine: number[], deg: number) {
+    return matMulMat4(makeRotateZ(deg), affine);
 }
 
-function reflect(cx: boolean, cy: boolean, cz: boolean) {
-    affine = matMulMat4(makeReflect(cx, cy, cz), affine);
+function reflect(affine: number[], cx: boolean, cy: boolean, cz: boolean) {
+    return matMulMat4(makeReflect(cx, cy, cz), affine);
+}
+
+function projection(affine: number[], width: number, height: number, depth: number) { 
+    return matMulMat4(makeProjection(width, height, depth), affine);
 }
 
 function initGui() {
