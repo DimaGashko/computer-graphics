@@ -100,7 +100,7 @@ function drawFrame() {
 
     gl.uniform2f(loc.resolution, gl.canvas.width, gl.canvas.height);
     gl.uniform1f(loc.time, performance.now() / 1000);
-    
+
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(f), gl.STATIC_DRAW);
 
     gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -147,11 +147,24 @@ function loadImg(src: string) {
     });
 }
 
-function updateAffine() { 
+function updateAffine() {
+    const {
+        reflectX, reflectY, reflectZ,
+        scaleX, scaleY, scaleZ,
+        shearXY, shearXZ, shearYX, shearYZ, shearZX, shearZY,
+        translateX, translateY, translateZ,
+    } = options;
 
+    rotateX(options.rotateX);
+    rotateY(options.rotateY);
+    rotateZ(options.rotateZ);
+    reflect(reflectX, reflectY, reflectZ);
+    scale(scaleX, scaleY, scaleZ);
+    shear(shearXY, shearYX, shearXZ, shearZX, shearYZ, shearZY);
+    translate(translateX, translateY, translateZ);
 }
 
-function translate(dx: number, dy: number, dz: number) { 
+function translate(dx: number, dy: number, dz: number) {
     affine = matMulMat4(makeTranslation(dx, dy, dz), affine);
 }
 
@@ -212,5 +225,5 @@ function initGui() {
     const reflect = gui.addFolder('Reflect');
     reflect.add(options, 'reflectX').onChange(updateAffine);
     reflect.add(options, 'reflectY').onChange(updateAffine);
-    reflect.add(options, 'reflectZ').onChange(updateAffine); 
+    reflect.add(options, 'reflectZ').onChange(updateAffine);
 }
