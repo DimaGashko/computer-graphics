@@ -8,8 +8,9 @@ import vShaderSource from './shaders/v.glsl';
 import fShaderSource from './shaders/f.glsl';
 import Vector from '../src/scripts/Vector';
 import { createShader, createProgram } from './scripts/webGlUtils';
-import { identity } from './affine';
 import f from './geometries/f';
+import matMulMat4 from './scripts/math/matMulMat4';
+import { makeIdentity, makeTranslation, makeScale, makeShear, makeRotateX, makeRotateY, makeRotateZ, makeReflect } from './affine';
 
 const $: {
     canvas?: HTMLCanvasElement,
@@ -36,9 +37,12 @@ const options = {
     scaleY: 0,
     scaleZ: 0,
 
-    shearX: 0,
-    shearY: 0,
-    shearZ: 0,
+    shearXY: 0,
+    shearYX: 0,
+    shearXZ: 0,
+    shearZX: 0,
+    shearYZ: 0,
+    shearZY: 0,
 
     rotateX: 0,
     rotateY: 0,
@@ -49,7 +53,7 @@ const options = {
     reflectZ: 0,
 }
 
-const affine = identity();
+let affine = makeIdentity();
 
 const vShader = createShader(gl, gl.VERTEX_SHADER, vShaderSource);
 const fShader = createShader(gl, gl.FRAGMENT_SHADER, fShaderSource);
@@ -147,6 +151,34 @@ function updateAffine() {
 
 }
 
+function translate(dx: number, dy: number, dz: number) { 
+    affine = matMulMat4(makeTranslation(dx, dy, dz), affine);
+}
+
+function scale(cx: number, cy: number, cz: number) {
+    affine = matMulMat4(makeScale(cx, cy, cz), affine);
+}
+
+function shear(xy: number, yx: number, xz: number, zx: number, yz: number, zy: number) {
+    affine = matMulMat4(makeShear(xy, yx, xz, xz, yz, zy), affine);
+}
+
+function rotateX(deg: number) {
+    affine = matMulMat4(makeRotateX(deg), affine);
+}
+
+function rotateY(deg: number) {
+    affine = matMulMat4(makeRotateY(deg), affine);
+}
+
+function rotateZ(deg: number) {
+    affine = matMulMat4(makeRotateZ(deg), affine);
+}
+
+function reflect(cx: number, cy: number, cz: number) {
+    affine = matMulMat4(makeReflect(cx, cy, cz), affine);
+}
+
 function initGui() {
     const baseOptions = gui.addFolder('Base Options');
     baseOptions.addColor(options, 'color');
@@ -170,9 +202,12 @@ function initGui() {
     scale.open();
 
     const shear = gui.addFolder('Shear');
-    shear.add(options, 'shearX').onChange(updateAffine);
-    shear.add(options, 'shearY').onChange(updateAffine);
-    shear.add(options, 'shearZ').onChange(updateAffine);
+    shear.add(options, 'shearXY').onChange(updateAffine);
+    shear.add(options, 'shearYX').onChange(updateAffine);
+    shear.add(options, 'shearXZ').onChange(updateAffine);
+    shear.add(options, 'shearZX').onChange(updateAffine);
+    shear.add(options, 'shearYZ').onChange(updateAffine);
+    shear.add(options, 'shearZY').onChange(updateAffine);
 
     const reflect = gui.addFolder('Reflect');
     reflect.add(options, 'reflectX').onChange(updateAffine);

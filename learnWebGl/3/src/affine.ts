@@ -1,5 +1,5 @@
 
-export function identity() {
+export function makeIdentity() {
     return [
         1, 0, 0, 0,
         0, 1, 0, 0,
@@ -8,7 +8,7 @@ export function identity() {
     ];
 }
 
-export function translate(dx: number, dy: number, dz: number) {
+export function makeTranslation(dx: number, dy: number, dz: number) {
     return [
         1, 0, 0, dx,
         0, 1, 0, dy,
@@ -17,7 +17,7 @@ export function translate(dx: number, dy: number, dz: number) {
     ];
 }
 
-export function scale(cx: number, cy: number, cz: number) {
+export function makeScale(cx: number, cy: number, cz: number) {
     return [
         cx, 0, 0, 0,
         0, cy, 0, 0,
@@ -26,7 +26,7 @@ export function scale(cx: number, cy: number, cz: number) {
     ];
 }
 
-export function shear(xy: number, yx: number, xz: number, zx: number, yz: number, zy: number) {
+export function makeShear(xy: number, yx: number, xz: number, zx: number, yz: number, zy: number) {
     return [
         1, xy, xz, 0,
         yx, 1, yz, 0,
@@ -35,7 +35,7 @@ export function shear(xy: number, yx: number, xz: number, zx: number, yz: number
     ];
 }
 
-export function rotateX(deg: number) {
+export function makeRotateX(deg: number) {
     return [
         1, 0, 0, 0,
         0, Math.cos(deg), -Math.sin(deg), 0,
@@ -44,7 +44,7 @@ export function rotateX(deg: number) {
     ];
 }
 
-export function rotateY(deg: number) {
+export function makeRotateY(deg: number) {
     return [
         Math.cos(deg), 0, Math.sin(deg), 0,
         0, 1, 0, 0,
@@ -53,7 +53,7 @@ export function rotateY(deg: number) {
     ];
 }
 
-export function rotateZ(deg: number) {
+export function makeRotateZ(deg: number) {
     return [
         Math.cos(deg), -Math.sin(deg), 0, 0,
         Math.sin(deg), Math.cos(deg), 0, 0,
@@ -62,7 +62,7 @@ export function rotateZ(deg: number) {
     ];
 }
 
-export function reflect(cx: boolean, cy: boolean, cz: boolean) {
+export function makeReflect(cx: boolean, cy: boolean, cz: boolean) {
     return [
         (cx ? -1 : 1), 0, 0, 0,
         0, (cy ? -1 : 1), 0, 0,
