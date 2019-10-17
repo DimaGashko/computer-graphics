@@ -1,7 +1,7 @@
 
 precision mediump float;
 
-attribute vec2 a_position;
+attribute vec4 a_position;
 
 uniform vec2 resolution;
 uniform float time;
