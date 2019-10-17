@@ -28,6 +28,7 @@ const gui = new dat.GUI();
 
 const options = {
     color: "#0f0",
+    depth: 400,
 
     translateX: 0,
     translateY: 0,
@@ -48,9 +49,9 @@ const options = {
     rotateY: 0,
     rotateZ: 0,
 
-    reflectX: 0,
-    reflectY: 0,
-    reflectZ: 0,
+    reflectX: false,
+    reflectY: false,
+    reflectZ: false,
 }
 
 let affine = makeIdentity();
@@ -188,39 +189,40 @@ function rotateZ(deg: number) {
     affine = matMulMat4(makeRotateZ(deg), affine);
 }
 
-function reflect(cx: number, cy: number, cz: number) {
+function reflect(cx: boolean, cy: boolean, cz: boolean) {
     affine = matMulMat4(makeReflect(cx, cy, cz), affine);
 }
 
 function initGui() {
     const baseOptions = gui.addFolder('Base Options');
     baseOptions.addColor(options, 'color');
+    baseOptions.add(options, 'depth', 0, 1000);
 
     const translate = gui.addFolder('Translate');
-    translate.add(options, 'translateX').onChange(updateAffine);
-    translate.add(options, 'translateY').onChange(updateAffine);
-    translate.add(options, 'translateZ').onChange(updateAffine);
+    translate.add(options, 'translateX', -500, 500).onChange(updateAffine);
+    translate.add(options, 'translateY', -500, 500).onChange(updateAffine);
+    translate.add(options, 'translateZ', -500, 500).onChange(updateAffine);
     translate.open();
 
     const rotate = gui.addFolder('Rotate');
-    rotate.add(options, 'rotateX').onChange(updateAffine);
-    rotate.add(options, 'rotateY').onChange(updateAffine);
-    rotate.add(options, 'rotateZ').onChange(updateAffine);
+    rotate.add(options, 'rotateX', -Math.PI, Math.PI).onChange(updateAffine);
+    rotate.add(options, 'rotateY', -Math.PI, Math.PI).onChange(updateAffine);
+    rotate.add(options, 'rotateZ', -Math.PI, Math.PI).onChange(updateAffine);
     rotate.open();
 
     const scale = gui.addFolder('Scale');
-    scale.add(options, 'scaleX').onChange(updateAffine);
-    scale.add(options, 'scaleY').onChange(updateAffine);
-    scale.add(options, 'scaleZ').onChange(updateAffine);
+    scale.add(options, 'scaleX', 0, 5).onChange(updateAffine);
+    scale.add(options, 'scaleY', 0, 5).onChange(updateAffine);
+    scale.add(options, 'scaleZ', 0, 5).onChange(updateAffine);
     scale.open();
 
     const shear = gui.addFolder('Shear');
-    shear.add(options, 'shearXY').onChange(updateAffine);
-    shear.add(options, 'shearYX').onChange(updateAffine);
-    shear.add(options, 'shearXZ').onChange(updateAffine);
-    shear.add(options, 'shearZX').onChange(updateAffine);
-    shear.add(options, 'shearYZ').onChange(updateAffine);
-    shear.add(options, 'shearZY').onChange(updateAffine);
+    shear.add(options, 'shearXY', -3, 3).onChange(updateAffine);
+    shear.add(options, 'shearYX', -3, 3).onChange(updateAffine);
+    shear.add(options, 'shearXZ', -3, 3).onChange(updateAffine);
+    shear.add(options, 'shearZX', -3, 3).onChange(updateAffine);
+    shear.add(options, 'shearYZ', -3, 3).onChange(updateAffine);
+    shear.add(options, 'shearZY', -3, 3).onChange(updateAffine);
 
     const reflect = gui.addFolder('Reflect');
     reflect.add(options, 'reflectX').onChange(updateAffine);
