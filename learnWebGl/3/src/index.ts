@@ -35,9 +35,9 @@ const options = {
     translateY: 0,
     translateZ: 0,
 
-    scaleX: 0,
-    scaleY: 0,
-    scaleZ: 0,
+    scaleX: 1,
+    scaleY: 1,
+    scaleZ: 1,
 
     shearXY: 0,
     shearYX: 0,
@@ -110,7 +110,7 @@ function drawFrame() {
     gl.vertexAttribPointer(loc.aPosition, 3, gl.FLOAT, false, 0, 0);
 
     gl.uniformMatrix4fv(loc.affine, false, affine);
-    gl.uniform2f(loc.resolution, gl.canvas.width, gl.canvas.height);
+    gl.uniform2f(loc.resolution, canvasSize.x, canvasSize.y);
     gl.uniform1f(loc.time, performance.now() / 1000);
     gl.uniform4f(loc.color, color.r, color.g, color.b, color.a);
 
@@ -174,9 +174,10 @@ function updateAffine() {
         translateX, translateY, translateZ,
     } = options;
 
+    affine = makeIdentity();
     //affine = rotateX(affine, options.rotateX);
     //affine = rotateY(affine, options.rotateY);
-    //affine = rotateZ(affine, options.rotateZ);
+    affine = rotateZ(affine, options.rotateZ);
     //affine = reflect(affine, reflectX, reflectY, reflectZ);
     //affine = scale(affine, scaleX, scaleY, scaleZ);
     //affine = shear(affine, shearXY, shearYX, shearXZ, shearZX, shearYZ, shearZY);
@@ -222,30 +223,30 @@ function initGui() {
     baseOptions.add(options, 'depth', 0, 1000);
 
     const translate = gui.addFolder('Translate');
-    translate.add(options, 'translateX', -500, 500).onChange(updateAffine);
-    translate.add(options, 'translateY', -500, 500).onChange(updateAffine);
-    translate.add(options, 'translateZ', -500, 500).onChange(updateAffine);
+    translate.add(options, 'translateX', -500, 500, 1).onChange(updateAffine);
+    translate.add(options, 'translateY', -500, 500, 1).onChange(updateAffine);
+    translate.add(options, 'translateZ', -500, 500, 1).onChange(updateAffine);
     translate.open();
 
     const rotate = gui.addFolder('Rotate');
-    rotate.add(options, 'rotateX', -Math.PI, Math.PI).onChange(updateAffine);
-    rotate.add(options, 'rotateY', -Math.PI, Math.PI).onChange(updateAffine);
-    rotate.add(options, 'rotateZ', -Math.PI, Math.PI).onChange(updateAffine);
+    rotate.add(options, 'rotateX', -Math.PI, Math.PI, 0.05).onChange(updateAffine);
+    rotate.add(options, 'rotateY', -Math.PI, Math.PI, 0.05).onChange(updateAffine);
+    rotate.add(options, 'rotateZ', -Math.PI, Math.PI, 0.05).onChange(updateAffine);
     rotate.open();
 
     const scale = gui.addFolder('Scale');
-    scale.add(options, 'scaleX', 0, 5).onChange(updateAffine);
-    scale.add(options, 'scaleY', 0, 5).onChange(updateAffine);
-    scale.add(options, 'scaleZ', 0, 5).onChange(updateAffine);
+    scale.add(options, 'scaleX', 0, 5, 0.1).onChange(updateAffine);
+    scale.add(options, 'scaleY', 0, 5, 0.1).onChange(updateAffine);
+    scale.add(options, 'scaleZ', 0, 5, 0.1).onChange(updateAffine);
     scale.open();
 
     const shear = gui.addFolder('Shear');
-    shear.add(options, 'shearXY', -3, 3).onChange(updateAffine);
-    shear.add(options, 'shearYX', -3, 3).onChange(updateAffine);
-    shear.add(options, 'shearXZ', -3, 3).onChange(updateAffine);
-    shear.add(options, 'shearZX', -3, 3).onChange(updateAffine);
-    shear.add(options, 'shearYZ', -3, 3).onChange(updateAffine);
-    shear.add(options, 'shearZY', -3, 3).onChange(updateAffine);
+    shear.add(options, 'shearXY', -3, 3, 0.1).onChange(updateAffine);
+    shear.add(options, 'shearYX', -3, 3, 0.1).onChange(updateAffine);
+    shear.add(options, 'shearXZ', -3, 3, 0.1).onChange(updateAffine);
+    shear.add(options, 'shearZX', -3, 3, 0.1).onChange(updateAffine);
+    shear.add(options, 'shearYZ', -3, 3, 0.1).onChange(updateAffine);
+    shear.add(options, 'shearZY', -3, 3, 0.1).onChange(updateAffine);
 
     const reflect = gui.addFolder('Reflect');
     reflect.add(options, 'reflectX').onChange(updateAffine);

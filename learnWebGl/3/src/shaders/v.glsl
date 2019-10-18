@@ -9,5 +9,6 @@ uniform float time;
 uniform mat4 affine;
 
 void main() {
-  gl_Position = vec4(a_position.xy / resolution, 0, 1);
+  vec4 c = affine * a_position;
+  gl_Position = vec4(c.xy / resolution, a_position.z, 1);
 }
