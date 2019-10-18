@@ -63,10 +63,16 @@ const program = createProgram(gl, vShader, fShader);
 const loc = {
     aPosition: gl.getAttribLocation(program, 'a_position'),
     resolution: gl.getUniformLocation(program, 'resolution'),
+    affine: gl.getUniformLocation(program, 'affine'),
     time: gl.getUniformLocation(program, 'time'),
 }
+
 const positionBuffer = gl.createBuffer();
 
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(f), gl.STATIC_DRAW);
+
+updateAffine();
 initEvents();
 resize();
 start();
@@ -99,12 +105,11 @@ function drawFrame() {
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.vertexAttribPointer(loc.aPosition, 3, gl.FLOAT, false, 0, 0);
 
+    gl.uniformMatrix4fv(loc.affine, false, affine);
     gl.uniform2f(loc.resolution, gl.canvas.width, gl.canvas.height);
     gl.uniform1f(loc.time, performance.now() / 1000);
 
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(f), gl.STATIC_DRAW);
-
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    gl.drawArrays(gl.TRIANGLES, 0, f.length / 3);
 }
 
 function resize() {
