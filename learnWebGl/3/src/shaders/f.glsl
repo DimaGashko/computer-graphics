@@ -8,5 +8,5 @@ varying vec4 pos;
 varying vec4 color;
 
 void main() {
-  gl_FragColor = min(color, baseColor);
+  gl_FragColor = color * baseColor;
 }

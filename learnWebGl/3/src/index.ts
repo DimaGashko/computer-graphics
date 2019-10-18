@@ -30,7 +30,7 @@ const gui = new dat.GUI();
 
 const options = {
     color: "#0f0",
-    depth: 400,
+    depth: 4000,
 
     translateX: 0,
     translateY: 0,
@@ -76,7 +76,7 @@ gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(f.vertices), gl.STATIC_DRAW);
 
 const colorBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(f.colors), gl.STATIC_DRAW);
+gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array(f.colors), gl.STATIC_DRAW);
 
 initEvents();
 resize();
