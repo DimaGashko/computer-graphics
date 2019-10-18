@@ -9,9 +9,10 @@ import vShaderSource from './shaders/v.glsl';
 import fShaderSource from './shaders/f.glsl';
 import Vector from '../src/scripts/Vector';
 import { createShader, createProgram } from './scripts/webGlUtils';
+
+import { makeIdentity, makeTranslation, makeScale, makeShear, makeRotateX, makeRotateY, makeRotateZ, makeReflect, makeProjection } from './affine';
 import f from './geometries/f';
 import matMulMat4 from './scripts/math/matMulMat4';
-import { makeIdentity, makeTranslation, makeScale, makeShear, makeRotateX, makeRotateY, makeRotateZ, makeReflect, makeProjection } from './affine';
 
 const $: {
     canvas?: HTMLCanvasElement,
@@ -63,15 +64,19 @@ const program = createProgram(gl, vShader, fShader);
 
 const loc = {
     aPosition: gl.getAttribLocation(program, 'a_position'),
+    aColor: gl.getAttribLocation(program, 'a_color'),
     affine: gl.getUniformLocation(program, 'affine'),
-    color: gl.getUniformLocation(program, 'color'),
+    baseColor: gl.getUniformLocation(program, 'baseColor'),
     time: gl.getUniformLocation(program, 'time'),
 }
 
 const positionBuffer = gl.createBuffer();
-
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(f), gl.STATIC_DRAW);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(f.vertices), gl.STATIC_DRAW);
+
+const colorBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(f.colors), gl.STATIC_DRAW);
 
 initEvents();
 resize();
@@ -100,7 +105,8 @@ function drawFrame() {
     const color = getColor();
 
     gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.enable(gl.DEPTH_TEST);
 
     gl.useProgram(program);
 
@@ -108,11 +114,15 @@ function drawFrame() {
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.vertexAttribPointer(loc.aPosition, 3, gl.FLOAT, false, 0, 0);
 
+    gl.enableVertexAttribArray(loc.aColor);
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.vertexAttribPointer(loc.aColor, 3, gl.UNSIGNED_BYTE, true, 0, 0);
+
     gl.uniformMatrix4fv(loc.affine, false, affine);
     gl.uniform1f(loc.time, performance.now() / 1000);
-    gl.uniform4f(loc.color, color.r, color.g, color.b, color.a);
+    gl.uniform4f(loc.baseColor, color.r, color.g, color.b, color.a);
 
-    gl.drawArrays(gl.TRIANGLES, 0, f.length / 3);
+    gl.drawArrays(gl.TRIANGLES, 0, 16 * 6);
 }
 
 function resize() {
