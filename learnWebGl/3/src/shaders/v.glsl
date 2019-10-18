@@ -3,11 +3,12 @@ precision mediump float;
 
 attribute vec4 a_position;
 
-uniform vec2 resolution;
+uniform mat4 affine;
 uniform float time;
 
-uniform mat4 affine;
+varying vec4 pos;
 
 void main() {
   gl_Position = affine * a_position;
+  pos = gl_Position;
 }

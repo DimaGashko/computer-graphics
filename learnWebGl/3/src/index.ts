@@ -63,7 +63,6 @@ const program = createProgram(gl, vShader, fShader);
 
 const loc = {
     aPosition: gl.getAttribLocation(program, 'a_position'),
-    resolution: gl.getUniformLocation(program, 'resolution'),
     affine: gl.getUniformLocation(program, 'affine'),
     color: gl.getUniformLocation(program, 'color'),
     time: gl.getUniformLocation(program, 'time'),
@@ -110,7 +109,6 @@ function drawFrame() {
     gl.vertexAttribPointer(loc.aPosition, 3, gl.FLOAT, false, 0, 0);
 
     gl.uniformMatrix4fv(loc.affine, false, affine);
-    gl.uniform2f(loc.resolution, canvasSize.x, canvasSize.y);
     gl.uniform1f(loc.time, performance.now() / 1000);
     gl.uniform4f(loc.color, color.r, color.g, color.b, color.a);
 
