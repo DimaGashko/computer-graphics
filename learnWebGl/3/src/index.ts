@@ -33,10 +33,10 @@ const options = {
     depth: 4000,
 
     translateX: 350,
-    translateY: 100,
+    translateY: 120,
     translateZ: 0,
 
-    rotateX: 0.1,
+    rotateX: -0.25,
     rotateY: 0.1,
     rotateZ: 0.1,
 

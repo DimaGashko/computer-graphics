@@ -295,8 +295,8 @@ function drawPixel(x: number, y: number) {
     if (options.noGaps) {
         virtualCanvas.setPixel(x + charStart ^ 0, y, true);
     } else {
-        x = x + charStart + -options.tCenterX;
-        y = y + -options.tCenterY;
+        x = x + charStart - options.tCenterX;
+        y = y - options.tCenterY;
 
         [x, y] = matrix3x3MulVec(tMatrix, [x, y, 1]);
 
