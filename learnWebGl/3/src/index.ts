@@ -32,13 +32,17 @@ const options = {
     color: "#0f0",
     depth: 4000,
 
-    translateX: 0,
-    translateY: 0,
+    translateX: 350,
+    translateY: 100,
     translateZ: 0,
 
-    scaleX: 1,
-    scaleY: 1,
-    scaleZ: 1,
+    rotateX: 0.1,
+    rotateY: 0.1,
+    rotateZ: 0.1,
+
+    scaleX: 2,
+    scaleY: 2,
+    scaleZ: 2,
 
     shearXY: 0,
     shearYX: 0,
@@ -46,10 +50,6 @@ const options = {
     shearZX: 0,
     shearYZ: 0,
     shearZY: 0,
-
-    rotateX: 0,
-    rotateY: 0,
-    rotateZ: 0,
 
     reflectX: false,
     reflectY: false,
@@ -103,6 +103,8 @@ function start() {
 
 function drawFrame() {
     const color = getColor();
+
+    affine = rotateY(affine, 0.01);
 
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
