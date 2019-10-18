@@ -71,11 +71,14 @@ export function makeReflect(cx: boolean, cy: boolean, cz: boolean) {
     ];
 }
 
-export function makeProjection(width: number, height: number, depth: number) {
+export function makePerspective(fieldOfView: number, aspect: number, near: number, far: number) {
+    var f = Math.tan(Math.PI * 0.5 - 0.5 * fieldOfView);
+    var rangeInv = 1 / (near - far);
+
     return [
-        2 / width, 0, 0, 0,
-        0, -2 / height, 0, 0,
-        0, 0, 2 / depth, 0,
-        -1, 1, 0, 1,
+        f / aspect, 0, 0, 0,
+        0, f, 0, 0,
+        0, 0, (near + far) * rangeInv, -1,
+        0, 0, near * far * rangeInv * 2, 0
     ];
 }

@@ -10,7 +10,7 @@ import fShaderSource from './shaders/f.glsl';
 import Vector from '../src/scripts/Vector';
 import { createShader, createProgram } from './scripts/webGlUtils';
 
-import { makeIdentity, makeTranslation, makeScale, makeShear, makeRotateX, makeRotateY, makeRotateZ, makeReflect, makeProjection } from './affine';
+import { makeIdentity, makeTranslation, makeScale, makeShear, makeRotateX, makeRotateY, makeRotateZ, makeReflect, makeProjection, makeZToWMatrix, makePerspective } from './affine';
 import f from './geometries/f';
 import matMulMat4 from './scripts/math/matMulMat4';
 
@@ -30,20 +30,19 @@ const gui = new dat.GUI();
 
 const options = {
     color: "#0f0",
-    depth: 4000,
-    fudgeFactor: 1,
+    fieldOfView: Math.PI / 3,
 
-    translateX: 350,
-    translateY: 120,
-    translateZ: 0,
+    translateX: 0,
+    translateY: 0,
+    translateZ: -500,
 
     rotateX: -0.25,
     rotateY: 0.1,
     rotateZ: 0.1,
 
-    scaleX: 2,
-    scaleY: 2,
-    scaleZ: 2,
+    scaleX: 1,
+    scaleY: 1,
+    scaleZ: 1,
 
     shearXY: 0,
     shearYX: 0,
@@ -69,7 +68,6 @@ const loc = {
     affine: gl.getUniformLocation(program, 'affine'),
     baseColor: gl.getUniformLocation(program, 'baseColor'),
     time: gl.getUniformLocation(program, 'time'),
-    fudgeFactor: gl.getUniformLocation(program, 'fudgeFactor'),
 }
 
 const positionBuffer = gl.createBuffer();
@@ -125,7 +123,6 @@ function drawFrame() {
     gl.uniformMatrix4fv(loc.affine, false, affine);
     gl.uniform1f(loc.time, performance.now() / 1000);
     gl.uniform4f(loc.baseColor, color.r, color.g, color.b, color.a);
-    gl.uniform1f(loc.fudgeFactor, options.fudgeFactor);
 
     gl.drawArrays(gl.TRIANGLES, 0, 16 * 6);
 }
@@ -187,8 +184,10 @@ function updateAffine() {
         translateX, translateY, translateZ,
     } = options;
 
+    const ratio = canvasSize.x / canvasSize.y;
+
     affine = makeIdentity();
-    affine = projection(affine, canvasSize.x, canvasSize.y, options.depth);
+    affine = perspective(affine, options.fieldOfView, ratio, 1, 2000);
     affine = translate(affine, translateX, translateY, translateZ);
     affine = rotateX(affine, options.rotateX);
     affine = rotateY(affine, options.rotateY);
@@ -226,20 +225,19 @@ function reflect(affine: number[], cx: boolean, cy: boolean, cz: boolean) {
     return matMulMat4(makeReflect(cx, cy, cz), affine);
 }
 
-function projection(affine: number[], width: number, height: number, depth: number) {
-    return matMulMat4(makeProjection(width, height, depth), affine);
+function perspective(affine: number[], fieldOfView: number, aspect: number, near: number, far: number) {
+    return matMulMat4(makePerspective(fieldOfView, aspect, near, far), affine);
 }
 
 function initGui() {
     const baseOptions = gui.addFolder('Base Options');
     baseOptions.addColor(options, 'color');
-    baseOptions.add(options, 'depth', 0, 1000);
-    baseOptions.add(options, 'fudgeFactor', 0, 10);
+    baseOptions.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01).onChange(updateAffine);
 
     const translate = gui.addFolder('Translate');
     translate.add(options, 'translateX', -500, 500, 1).onChange(updateAffine);
     translate.add(options, 'translateY', -500, 500, 1).onChange(updateAffine);
-    translate.add(options, 'translateZ', -500, 500, 1).onChange(updateAffine);
+    translate.add(options, 'translateZ', -1000, 1, 1).onChange(updateAffine);
     translate.open();
 
     const rotate = gui.addFolder('Rotate');
