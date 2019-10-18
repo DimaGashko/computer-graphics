@@ -2,6 +2,7 @@ import 'normalize.scss/normalize.scss';
 import './index.scss';
 
 import { throttle } from 'throttle-debounce';
+import hexToRgba from 'hex-to-rgba';
 import * as dat from 'dat.gui';
 
 import vShaderSource from './shaders/v.glsl';
@@ -64,6 +65,7 @@ const loc = {
     aPosition: gl.getAttribLocation(program, 'a_position'),
     resolution: gl.getUniformLocation(program, 'resolution'),
     affine: gl.getUniformLocation(program, 'affine'),
+    color: gl.getUniformLocation(program, 'color'),
     time: gl.getUniformLocation(program, 'time'),
 }
 
@@ -96,6 +98,8 @@ function start() {
 }
 
 function drawFrame() {
+    const color = getColor();
+
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -108,6 +112,7 @@ function drawFrame() {
     gl.uniformMatrix4fv(loc.affine, false, affine);
     gl.uniform2f(loc.resolution, gl.canvas.width, gl.canvas.height);
     gl.uniform1f(loc.time, performance.now() / 1000);
+    gl.uniform4f(loc.color, color.r, color.g, color.b, color.a);
 
     gl.drawArrays(gl.TRIANGLES, 0, f.length / 3);
 }
@@ -153,6 +158,14 @@ function loadImg(src: string) {
     });
 }
 
+function getColor() {
+    const [r, g, b, a] = hexToRgba(options.color).split(', ')
+        .map(c => c.replace(/\D+/g, ''))
+        .map(c => +c / 255);
+
+    return { r, g, b, a };
+}
+
 function updateAffine() {
     const {
         reflectX, reflectY, reflectZ,
@@ -161,14 +174,14 @@ function updateAffine() {
         translateX, translateY, translateZ,
     } = options;
 
-    affine = rotateX(affine, options.rotateX);
-    affine = rotateY(affine, options.rotateY);
-    affine = rotateZ(affine, options.rotateZ);
-    affine = reflect(affine, reflectX, reflectY, reflectZ);
-    affine = scale(affine, scaleX, scaleY, scaleZ);
-    affine = shear(affine, shearXY, shearYX, shearXZ, shearZX, shearYZ, shearZY);
-    affine = translate(affine, translateX, translateY, translateZ);
-    affine = projection(affine, canvasSize.x, canvasSize.y, options.depth);
+    //affine = rotateX(affine, options.rotateX);
+    //affine = rotateY(affine, options.rotateY);
+    //affine = rotateZ(affine, options.rotateZ);
+    //affine = reflect(affine, reflectX, reflectY, reflectZ);
+    //affine = scale(affine, scaleX, scaleY, scaleZ);
+    //affine = shear(affine, shearXY, shearYX, shearXZ, shearZX, shearYZ, shearZY);
+    //affine = translate(affine, translateX, translateY, translateZ);
+    //affine = projection(affine, canvasSize.x, canvasSize.y, options.depth);
 }
 
 function translate(affine: number[], dx: number, dy: number, dz: number) {
@@ -199,7 +212,7 @@ function reflect(affine: number[], cx: boolean, cy: boolean, cz: boolean) {
     return matMulMat4(makeReflect(cx, cy, cz), affine);
 }
 
-function projection(affine: number[], width: number, height: number, depth: number) { 
+function projection(affine: number[], width: number, height: number, depth: number) {
     return matMulMat4(makeProjection(width, height, depth), affine);
 }
 
