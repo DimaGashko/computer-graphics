@@ -10,10 +10,10 @@ export function makeIdentity() {
 
 export function makeTranslation(dx: number, dy: number, dz: number) {
     return [
-        1, 0, 0, dx,
-        0, 1, 0, dy,
-        0, 0, 1, dz,
-        0, 0, 0, 1,
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        dx, dy, dz, 1,
     ];
 }
 

@@ -74,9 +74,9 @@ const positionBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(f), gl.STATIC_DRAW);
 
-updateAffine();
 initEvents();
 resize();
+updateAffine();
 start();
 initGui();
 
@@ -175,14 +175,14 @@ function updateAffine() {
     } = options;
 
     affine = makeIdentity();
-    //affine = rotateX(affine, options.rotateX);
-    //affine = rotateY(affine, options.rotateY);
+    affine = projection(affine, canvasSize.x, canvasSize.y, options.depth);
+    affine = translate(affine, translateX, translateY, translateZ);
+    affine = rotateX(affine, options.rotateX);
+    affine = rotateY(affine, options.rotateY);
     affine = rotateZ(affine, options.rotateZ);
-    //affine = reflect(affine, reflectX, reflectY, reflectZ);
-    //affine = scale(affine, scaleX, scaleY, scaleZ);
-    //affine = shear(affine, shearXY, shearYX, shearXZ, shearZX, shearYZ, shearZY);
-    //affine = translate(affine, translateX, translateY, translateZ);
-    //affine = projection(affine, canvasSize.x, canvasSize.y, options.depth);
+    affine = reflect(affine, reflectX, reflectY, reflectZ);
+    affine = scale(affine, scaleX, scaleY, scaleZ);
+    affine = shear(affine, shearXY, shearYX, shearXZ, shearZX, shearYZ, shearZY);
 }
 
 function translate(affine: number[], dx: number, dy: number, dz: number) {
