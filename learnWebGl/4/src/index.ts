@@ -31,6 +31,7 @@ const gui = new dat.GUI();
 const options = {
     color: "#0f0",
     depth: 4000,
+    fudgeFactor: 1,
 
     translateX: 350,
     translateY: 120,
@@ -68,6 +69,7 @@ const loc = {
     affine: gl.getUniformLocation(program, 'affine'),
     baseColor: gl.getUniformLocation(program, 'baseColor'),
     time: gl.getUniformLocation(program, 'time'),
+    fudgeFactor: gl.getUniformLocation(program, 'fudgeFactor'),
 }
 
 const positionBuffer = gl.createBuffer();
@@ -123,6 +125,7 @@ function drawFrame() {
     gl.uniformMatrix4fv(loc.affine, false, affine);
     gl.uniform1f(loc.time, performance.now() / 1000);
     gl.uniform4f(loc.baseColor, color.r, color.g, color.b, color.a);
+    gl.uniform1f(loc.fudgeFactor, options.fudgeFactor);
 
     gl.drawArrays(gl.TRIANGLES, 0, 16 * 6);
 }
@@ -231,6 +234,7 @@ function initGui() {
     const baseOptions = gui.addFolder('Base Options');
     baseOptions.addColor(options, 'color');
     baseOptions.add(options, 'depth', 0, 1000);
+    baseOptions.add(options, 'fudgeFactor', 0, 10);
 
     const translate = gui.addFolder('Translate');
     translate.add(options, 'translateX', -500, 500, 1).onChange(updateAffine);

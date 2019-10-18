@@ -6,13 +6,14 @@ attribute vec4 a_color;
 
 uniform mat4 affine;
 uniform float time;
+uniform float fudgeFactor;
 
-varying vec4 pos;
 varying vec4 color;
 
 void main() {
-  gl_Position = affine * a_position;
+  vec4 pos = affine * a_position;
 
-  pos = gl_Position;
+  gl_Position = vec4(pos.xy / (1.0 + pos.z * fudgeFactor), pos.zw);
+
   color = a_color;
 }
