@@ -6,10 +6,10 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 
     color: #fff;
-    
+
     background: #212121;
     background: linear-gradient(to top, #010A10 45%, #59230B 80%, #2F1107 100%);
-    
+
 
     min-height: 100vh;
 }
@@ -38,5 +38,11 @@ body {
 
     &:focus {
         opacity: 1;
+    }
+}
+
+.gui-root {
+    select {
+        color: #333;
     }
 }
