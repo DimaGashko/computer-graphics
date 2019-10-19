@@ -40,22 +40,24 @@ const loc = {
 
 const gui = new dat.GUI();
 
+const worldRadius = 25000;
+
 const options = {
     baseColor: "#0b0",
     rotateSpeed: 0.01,
 
     fieldOfView: Math.PI / 3,
+    far: worldRadius * 2,
     near: 1,
-    far: 5000,
 
     activeGeometry: 'Geometry 1',
     baseGlColor: null,
 }
 
 const camera = {
-    translateX: 10,
-    translateY: 5,
-    translateZ: 7,
+    translateX: 0,
+    translateY: 0,
+    translateZ: 0,
 
     rotateX: 0,
     rotateY: 0,
@@ -91,7 +93,7 @@ geometries.map(({ options }, i, { length }) => {
 
     options.translateX = offset + x * size * k;
     options.translateY = offset + y * size * k;
-    options.translateZ = -900 - z * size * k;
+    options.translateZ = -offset - z * size * k;
 });
 
 initEvents();
@@ -243,9 +245,9 @@ function initGui() {
         initGeometryGui(geometryFolder);
     });
 
-    cameraFolder.add(camera, 'translateX', -2500, 2500);
-    cameraFolder.add(camera, 'translateY', -2500, 2500);
-    cameraFolder.add(camera, 'translateZ', -2500, 2500);
+    cameraFolder.add(camera, 'translateX', -worldRadius, worldRadius);
+    cameraFolder.add(camera, 'translateY', -worldRadius, worldRadius);
+    cameraFolder.add(camera, 'translateZ', -worldRadius, worldRadius);
 
     cameraFolder.add(camera, 'rotateX', -Math.PI, Math.PI, 0.05);
     cameraFolder.add(camera, 'rotateY', -Math.PI, Math.PI, 0.05);
