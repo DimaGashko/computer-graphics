@@ -182,8 +182,8 @@ function updateViewMatrix() {
     const { translateX, translateY, translateZ, rotateX, rotateY, rotateZ } = camera;
 
     viewMatrix = new TMatrix()
-        .rotateX(rotateX)
         .translate(translateX, translateY, translateZ)
+        .rotateX(rotateX)
         .rotateY(rotateY)
         .rotateZ(rotateZ)
         .inverse();
@@ -243,9 +243,9 @@ function initGui() {
         initGeometryGui(geometryFolder);
     });
 
-    cameraFolder.add(camera, 'translateX', -2500, 500);
-    cameraFolder.add(camera, 'translateY', -2500, 500);
-    cameraFolder.add(camera, 'translateZ', -2500, 500);
+    cameraFolder.add(camera, 'translateX', -2500, 2500);
+    cameraFolder.add(camera, 'translateY', -2500, 2500);
+    cameraFolder.add(camera, 'translateZ', -2500, 2500);
 
     cameraFolder.add(camera, 'rotateX', -Math.PI, Math.PI, 0.05);
     cameraFolder.add(camera, 'rotateY', -Math.PI, Math.PI, 0.05);
