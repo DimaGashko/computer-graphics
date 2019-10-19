@@ -10,8 +10,8 @@ import fShaderSource from './shaders/f.glsl';
 import Vector from './scripts/math/Vector';
 import { createShader, createProgram } from './scripts/webGlUtils';
 
-import f from './geometries/FGeometry/data/vertices';
 import TMatrix from './scripts/TMatrix/TMatrix';
+import FGeometry from './geometries/FGeometry/FGeometry';
 
 const $: {
     canvas?: HTMLCanvasElement,
@@ -55,7 +55,7 @@ const options = {
     reflectZ: false,
 }
 
-const tMatrix = new TMatrix();
+const fGeometry = new FGeometry();
 
 const vShader = createShader(gl, gl.VERTEX_SHADER, vShaderSource);
 const fShader = createShader(gl, gl.FRAGMENT_SHADER, fShaderSource);
@@ -64,22 +64,23 @@ const program = createProgram(gl, vShader, fShader);
 const loc = {
     aPosition: gl.getAttribLocation(program, 'a_position'),
     aColor: gl.getAttribLocation(program, 'a_color'),
+
     tMatrix: gl.getUniformLocation(program, 'tMatrix'),
     baseColor: gl.getUniformLocation(program, 'baseColor'),
     time: gl.getUniformLocation(program, 'time'),
 }
 
 const positionBuffer = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(f.vertices), gl.STATIC_DRAW);
-
 const colorBuffer = gl.createBuffer();
+
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, fGeometry.vertices, gl.STATIC_DRAW);
+
 gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array(f.colors), gl.STATIC_DRAW);
+gl.bufferData(gl.ARRAY_BUFFER, fGeometry.colors, gl.STATIC_DRAW);
 
 initEvents();
 resize();
-updateTMatrix();
 start();
 initGui();
 
@@ -103,7 +104,7 @@ function start() {
 function drawFrame() {
     const color = getColor();
 
-    tMatrix.rotateY(0.01);
+    fGeometry.tMatrix.rotateY(0.01);
 
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -119,7 +120,7 @@ function drawFrame() {
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
     gl.vertexAttribPointer(loc.aColor, 3, gl.UNSIGNED_BYTE, true, 0, 0);
 
-    gl.uniformMatrix4fv(loc.tMatrix, false, tMatrix.raw);
+    gl.uniformMatrix4fv(loc.tMatrix, false, fGeometry.tMatrix.raw);
     gl.uniform1f(loc.time, performance.now() / 1000);
     gl.uniform4f(loc.baseColor, color.r, color.g, color.b, color.a);
 
@@ -129,6 +130,7 @@ function drawFrame() {
 function resize() {
     updateMetrics();
     updateCanvasSize();
+    updateTMatrix();
 }
 
 function updateCanvasSize() {
@@ -176,6 +178,10 @@ function getColor() {
 }
 
 function updateTMatrix() {
+    const tMatrix = fGeometry.tMatrix;
+    
+    const ratio = canvasSize.x / canvasSize.y;
+
     const {
         reflectX, reflectY, reflectZ,
         scaleX, scaleY, scaleZ,
@@ -183,7 +189,6 @@ function updateTMatrix() {
         translateX, translateY, translateZ,
     } = options;
 
-    const ratio = canvasSize.x / canvasSize.y;
 
     tMatrix.reset();
     tMatrix.perspective(options.fieldOfView, ratio, 1, 2000);

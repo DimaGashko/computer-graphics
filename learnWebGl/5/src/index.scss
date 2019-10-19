@@ -5,8 +5,11 @@ html {
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 
-    background: #212121;
     color: #fff;
+    
+    background: #212121;
+    background: linear-gradient(to bottom, #010A10 30%, #59230B 80%, #2F1107 100%);
+    
 
     min-height: 100vh;
 }
