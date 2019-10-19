@@ -59,10 +59,11 @@ geometries.map(({ options }, i, { length }) => {
     const side = Math.sqrt(length) ^ 0;
     const x = i % side;
     const z = (i / side) ^ 0;
-    const size = 220;
+    const size = 180;
+    const k = 1.1;
 
-    options.translateX = - (size * side) / 2 + x * 250;
-    options.translateZ = -500 - z * 250;
+    options.translateX = - (size * side) / 2 + x * size * k;
+    options.translateZ = -500 - z * size * k;
 });
 
 initEvents();
@@ -71,7 +72,7 @@ start();
 initGui();
 
 function initEvents() {
-    window.addEventListener('resize', throttle(50, () => {
+    window.addEventListener('resize', throttle(1000, () => {
         resize();
     }));
 
@@ -94,7 +95,9 @@ function drawFrame() {
 
     gl.useProgram(program);
 
-    geometries.forEach(({ verticesBuffer, colorsBuffer, geometry }) => {
+    geometries.forEach(({ verticesBuffer, colorsBuffer, geometry }, i) => {
+        geometry.tMatrix.rotateY(0.01 + Math.random() / 100);
+
         gl.enableVertexAttribArray(loc.aPosition);
         gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer);
         gl.vertexAttribPointer(loc.aPosition, 3, gl.FLOAT, false, 0, 0);
@@ -172,7 +175,6 @@ function initGui() {
     });
 
     const geometriesFolder = gui.addFolder('Geometries');
-    geometriesFolder.open();
 
     geometries.slice(0, 5).forEach((geometry, i) => {
         const geometryFolder = geometriesFolder.addFolder(`Geometry ${i + 1}`);
