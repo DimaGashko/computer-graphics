@@ -13,6 +13,8 @@ import Geometry from './geometries/Geometry';
 import GlGeometry from './geometries/GlGeometry';
 import { hexToGlColor } from './scripts/utils';
 import TMatrix from './scripts/TMatrix';
+import matMulMat4 from './scripts/math/matMulMat4';
+import { makePerspective } from './scripts/affine';
 
 const $: {
     canvas?: HTMLCanvasElement,
@@ -186,7 +188,10 @@ function updateViewMatrix() {
         .rotateZ(rotateZ)
         .inverse();
 
-        
+    viewMatrix.setTMatrix(matMulMat4(
+        viewMatrix.matrix,
+        makePerspective(fieldOfView, ratio, near, far)
+    ));
 }
 
 function updateTMatrix(geometry: GlGeometry) {
@@ -200,11 +205,7 @@ function updateTMatrix(geometry: GlGeometry) {
         translateX, translateY, translateZ,
     } = geometry.options;
 
-    const { fieldOfView, near, far } = options;
-
-    tMatrix.reset()
-        .perspective(fieldOfView, ratio, near, far)
-        .customMatrix(viewMatrix.matrix)
+    tMatrix.reset(viewMatrix.matrix)
         .translate(translateX, translateY, translateZ)
         .rotateX(rotateX)
         .rotateY(rotateY)
