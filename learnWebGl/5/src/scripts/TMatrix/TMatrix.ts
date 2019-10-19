@@ -5,11 +5,12 @@ import mat4Inverse from "../math/mar4Inverse";
 export default class TMatrix {
     private _affine = makeIdentity();
 
-    public reset() { 
+    public reset() {
         this._affine = makeIdentity();
+        return this;
     }
 
-    public copy() { 
+    public copy() {
         const tMatrix = new TMatrix();
         tMatrix.setTMatrix(this.tMatrix);
         return tMatrix;
@@ -21,38 +22,47 @@ export default class TMatrix {
 
     public translate(dx: number, dy: number, dz: number) {
         this._affine = matMulMat4(makeTranslation(dx, dy, dz), this._affine);
+        return this;
     }
 
     public scale(cx: number, cy: number, cz: number) {
         this._affine = matMulMat4(makeScale(cx, cy, cz), this._affine);
+        return this;
     }
 
     public shear(xy: number, yx: number, xz: number, zx: number, yz: number, zy: number) {
         this._affine = matMulMat4(makeShear(xy, yx, xz, zx, yz, zy), this._affine);
+        return this;
     }
 
     public rotateX(deg: number) {
         this._affine = matMulMat4(makeRotateX(deg), this._affine);
+        return this;
     }
 
     public rotateY(deg: number) {
         this._affine = matMulMat4(makeRotateY(deg), this._affine);
+        return this;
     }
 
     public rotateZ(deg: number) {
         this._affine = matMulMat4(makeRotateZ(deg), this._affine);
+        return this;
     }
 
     public reflect(cx: boolean, cy: boolean, cz: boolean) {
         this._affine = matMulMat4(makeReflect(cx, cy, cz), this._affine);
+        return this;
     }
 
     public perspective(fieldOfView: number, aspect: number, near: number, far: number) {
         this._affine = matMulMat4(makePerspective(fieldOfView, aspect, near, far), this._affine);
+        return this;
     }
 
-    public inverse() { 
+    public inverse() {
         this._affine = mat4Inverse(this._affine);
+        return this;
     }
 
     public get tMatrix() {

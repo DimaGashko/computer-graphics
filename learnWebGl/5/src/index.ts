@@ -41,7 +41,10 @@ const gui = new dat.GUI();
 const options = {
     baseColor: "#0b0",
     rotateSpeed: 0.01,
+
     fieldOfView: Math.PI / 3,
+    near: 1,
+    far: 5000,
 
     activeGeometry: 'Geometry 1',
     baseGlColor: null,
@@ -51,8 +54,9 @@ options.baseGlColor = hexToGlColor(options.baseColor);
 
 let screenW = 0;
 let screenH = 0;
-let canvasW = 0
-let canvasH = 0
+let canvasW = 0;
+let canvasH = 0;
+let ratio = 0;
 
 const geometries = new Array(512).fill(0)
     .map(() => new FGeometry())
@@ -80,7 +84,8 @@ const cameraMatrix = new TMatrix();
 cameraMatrix.rotateY(0);
 cameraMatrix.translate(0, 0, 1000);
 
-const viewMatrix = cameraMatrix.copy().inverse();
+const viewMatrix = cameraMatrix.copy().inverse()
+    .perspective(options.fieldOfView, ratio, options.near, options.far);
 
 initEvents();
 resize();
@@ -114,7 +119,7 @@ function drawFrame() {
 
     const time = performance.now();
 
-    geometries.forEach(({ verticesBuffer, colorsBuffer, geometry, options: gOptions }) => {
+    geometries.forEach(({ verticesBuffer, colorsBuffer, geometry }) => {
         geometry.tMatrix.rotateY(options.rotateSpeed * (time - prevTime) / 16);
 
         gl.enableVertexAttribArray(loc.aPosition);
@@ -151,11 +156,13 @@ function updateCanvasSize() {
 }
 
 function updateMetrics() {
-    screenW = $.root.offsetWidth;
-    screenH = $.root.offsetHeight;
+    screenW = $.canvas.clientWidth;
+    screenH = $.canvas.clientHeight;
 
     canvasW = Math.floor(screenW * window.devicePixelRatio);
     canvasH = Math.floor(screenH * window.devicePixelRatio);
+
+    ratio = canvasH / canvasH;
 }
 
 function updateAllTMatrices() {
@@ -165,7 +172,7 @@ function updateAllTMatrices() {
 function updateTMatrix(geometry: GlGeometry) {
     const tMatrix = geometry.geometry.tMatrix;
 
-    const ratio = canvasW / canvasH;
+    const { fieldOfView, near, far } = options;
 
     const {
         reflectX, reflectY, reflectZ,
@@ -175,15 +182,15 @@ function updateTMatrix(geometry: GlGeometry) {
         translateX, translateY, translateZ,
     } = geometry.options;
 
-    tMatrix.reset();
-    tMatrix.perspective(options.fieldOfView, ratio, 1, 3000);
-    tMatrix.translate(translateX, translateY, translateZ);
-    tMatrix.rotateX(rotateX);
-    tMatrix.rotateY(rotateY);
-    tMatrix.rotateZ(rotateZ);
-    tMatrix.scale(scaleX, scaleY, scaleZ);
-    tMatrix.reflect(reflectX, reflectY, reflectZ);
-    tMatrix.shear(shearXY, shearYX, shearXZ, shearZX, shearYZ, shearZY);
+    tMatrix.reset()
+        .perspective(fieldOfView, ratio, near, far)
+        .translate(translateX, translateY, translateZ)
+        .rotateX(rotateX)
+        .rotateY(rotateY)
+        .rotateZ(rotateZ)
+        .scale(scaleX, scaleY, scaleZ)
+        .reflect(reflectX, reflectY, reflectZ)
+        .shear(shearXY, shearYX, shearXZ, shearZX, shearYZ, shearZY);
 }
 
 function getActiveGeometryOptions() {
