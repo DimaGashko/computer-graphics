@@ -1,5 +1,4 @@
 import Geometry from "./Geometry";
-import { hexToGlColor } from "../scripts/utils";
 
 export default class GlGeometry {
     public verticesBuffer: WebGLBuffer;

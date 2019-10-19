@@ -12,7 +12,8 @@ import FGeometry from './geometries/FGeometry/FGeometry';
 import Geometry from './geometries/Geometry';
 import GlGeometry from './geometries/GlGeometry';
 import { hexToGlColor } from './scripts/utils';
-import TMatrix from './scripts/TMatrix/TMatrix';
+import TMatrix from './scripts/TMatrix';
+import { makePerspective } from './scripts/affine';
 
 const $: {
     canvas?: HTMLCanvasElement,
@@ -50,6 +51,16 @@ const options = {
     baseGlColor: null,
 }
 
+const camera = {
+    translateX: 0,
+    translateY: 0,
+    translateZ: 0,
+
+    rotateX: 0,
+    rotateY: 0,
+    rotateZ: 0,
+}
+
 options.baseGlColor = hexToGlColor(options.baseColor);
 
 let screenW = 0;
@@ -58,7 +69,9 @@ let canvasW = 0;
 let canvasH = 0;
 let ratio = 0;
 
-const geometries = new Array(512).fill(0)
+let viewMatrix: TMatrix;
+
+const geometries = new Array(10000).fill(0)
     .map(() => new FGeometry())
     .map((geometry: Geometry) => {
         return new GlGeometry(gl, geometry);
@@ -79,13 +92,6 @@ geometries.map(({ options }, i, { length }) => {
     options.translateY = offset + y * size * k;
     options.translateZ = -900 - z * size * k;
 });
-
-const cameraMatrix = new TMatrix();
-cameraMatrix.rotateY(0);
-cameraMatrix.translate(0, 0, 1000);
-
-const viewMatrix = cameraMatrix.copy().inverse()
-    .perspective(options.fieldOfView, ratio, options.near, options.far);
 
 initEvents();
 resize();
@@ -119,8 +125,10 @@ function drawFrame() {
 
     const time = performance.now();
 
-    geometries.forEach(({ verticesBuffer, colorsBuffer, geometry }) => {
-        geometry.tMatrix.rotateY(options.rotateSpeed * (time - prevTime) / 16);
+    //updateAllTMatrices();
+
+    geometries.forEach(({ verticesBuffer, colorsBuffer, geometry, options: gOptions }) => {
+        gOptions.rotateY += (options.rotateSpeed * (time - prevTime) / 16);
 
         gl.enableVertexAttribArray(loc.aPosition);
         gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer);
@@ -136,7 +144,7 @@ function drawFrame() {
         let { r, g, b } = options.baseGlColor;
         gl.uniform4f(loc.baseColor, r, g, b, 1);
 
-        gl.drawArrays(gl.TRIANGLES, 0, 16 * 6);
+        gl.drawArrays(gl.TRIANGLES, 0, geometry.primitiveCount);
     });
 
     prevTime = time;
@@ -145,6 +153,7 @@ function drawFrame() {
 function resize() {
     updateMetrics();
     updateCanvasSize();
+    updateViewMatrix();
     updateAllTMatrices();
 }
 
@@ -165,14 +174,25 @@ function updateMetrics() {
     ratio = canvasH / canvasH;
 }
 
+function updateViewMatrix() { 
+    const { fieldOfView, near, far } = options;
+    const { translateX, translateY, translateZ, rotateX, rotateY, rotateZ } = camera;
+    
+    viewMatrix = new TMatrix()
+        .rotateY(rotateX)
+        .rotateY(rotateY)
+        .rotateZ(rotateZ)
+        .translate(translateX, translateY, translateZ)
+        .inverse()
+        .perspective(fieldOfView, ratio, near, far);
+}
+
 function updateAllTMatrices() {
     geometries.forEach(g => updateTMatrix(g));
 }
 
 function updateTMatrix(geometry: GlGeometry) {
     const tMatrix = geometry.geometry.tMatrix;
-
-    const { fieldOfView, near, far } = options;
 
     const {
         reflectX, reflectY, reflectZ,
@@ -182,8 +202,7 @@ function updateTMatrix(geometry: GlGeometry) {
         translateX, translateY, translateZ,
     } = geometry.options;
 
-    tMatrix.reset()
-        .perspective(fieldOfView, ratio, near, far)
+    tMatrix.reset(viewMatrix.tMatrix)
         .translate(translateX, translateY, translateZ)
         .rotateX(rotateX)
         .rotateY(rotateY)
@@ -214,6 +233,7 @@ function initGui() {
 
     baseOptions.add(options, 'rotateSpeed', -0.1, 0.1, 0.001);
     baseOptions.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01).onChange(() => {
+        updateViewMatrix();
         updateAllTMatrices();
     });
 
@@ -229,38 +249,36 @@ function initGui() {
 }
 
 function initGeometryGui(geometryFolder: dat.GUI) {
-    const geometry = getActiveGeometryOptions();
-    const update = () => { updateTMatrix(geometry) };
-    const { options } = geometry;
+    const { options } = getActiveGeometryOptions();
 
     const translate = geometryFolder.addFolder('Translate');
-    translate.add(options, 'translateX', -500, 500, 1).onChange(update);
-    translate.add(options, 'translateY', -500, 500, 1).onChange(update);
-    translate.add(options, 'translateZ', -2000, 1, 1).onChange(update);
+    translate.add(options, 'translateX', -500, 500, 1);
+    translate.add(options, 'translateY', -500, 500, 1);
+    translate.add(options, 'translateZ', -2000, 1, 1);
     translate.open();
 
     const rotate = geometryFolder.addFolder('Rotate');
-    rotate.add(options, 'rotateX', -Math.PI, Math.PI, 0.05).onChange(update);
-    rotate.add(options, 'rotateY', -Math.PI, Math.PI, 0.05).onChange(update);
-    rotate.add(options, 'rotateZ', -Math.PI, Math.PI, 0.05).onChange(update);
+    rotate.add(options, 'rotateX', -Math.PI, Math.PI, 0.05);
+    rotate.add(options, 'rotateY', -Math.PI, Math.PI, 0.05);
+    rotate.add(options, 'rotateZ', -Math.PI, Math.PI, 0.05);
     rotate.open();
 
     const scale = geometryFolder.addFolder('Scale');
-    scale.add(options, 'scaleX', 0, 5, 0.1).onChange(update);
-    scale.add(options, 'scaleY', 0, 5, 0.1).onChange(update);
-    scale.add(options, 'scaleZ', 0, 5, 0.1).onChange(update);
+    scale.add(options, 'scaleX', 0, 5, 0.1);
+    scale.add(options, 'scaleY', 0, 5, 0.1);
+    scale.add(options, 'scaleZ', 0, 5, 0.1);
     scale.open();
 
     const shear = geometryFolder.addFolder('Shear');
-    shear.add(options, 'shearXY', -3, 3, 0.1).onChange(update);
-    shear.add(options, 'shearYX', -3, 3, 0.1).onChange(update);
-    shear.add(options, 'shearXZ', -3, 3, 0.1).onChange(update);
-    shear.add(options, 'shearZX', -3, 3, 0.1).onChange(update);
-    shear.add(options, 'shearYZ', -3, 3, 0.1).onChange(update);
-    shear.add(options, 'shearZY', -3, 3, 0.1).onChange(update);
+    shear.add(options, 'shearXY', -3, 3, 0.1);
+    shear.add(options, 'shearYX', -3, 3, 0.1);
+    shear.add(options, 'shearXZ', -3, 3, 0.1);
+    shear.add(options, 'shearZX', -3, 3, 0.1);
+    shear.add(options, 'shearYZ', -3, 3, 0.1);
+    shear.add(options, 'shearZY', -3, 3, 0.1);
 
     const reflect = geometryFolder.addFolder('Reflect');
-    reflect.add(options, 'reflectX').onChange(update);
-    reflect.add(options, 'reflectY').onChange(update);
-    reflect.add(options, 'reflectZ').onChange(update);
+    reflect.add(options, 'reflectX');
+    reflect.add(options, 'reflectY');
+    reflect.add(options, 'reflectZ');
 }

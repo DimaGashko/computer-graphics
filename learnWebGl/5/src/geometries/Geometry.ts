@@ -1,4 +1,4 @@
-import TMatrix from "../scripts/TMatrix/TMatrix";
+import TMatrix from "../scripts/TMatrix";
 
 export default abstract class Geometry {
     constructor(public tMatrix: TMatrix = new TMatrix()) {

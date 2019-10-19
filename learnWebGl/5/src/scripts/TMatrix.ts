@@ -1,12 +1,14 @@
 import { makeIdentity, makeTranslation, makeShear, makeRotateX, makeRotateY, makeRotateZ, makePerspective, makeReflect, makeScale } from "./affine";
-import matMulMat4 from "../math/matMulMat4";
-import mat4Inverse from "../math/mar4Inverse";
+import matMulMat4 from "./math/matMulMat4";
+import mat4Inverse from "./math/mar4Inverse";
 
 export default class TMatrix {
-    private _affine = makeIdentity();
+    constructor(private _affine: number[] = makeIdentity()) {
+        
+    }
 
-    public reset() {
-        this._affine = makeIdentity();
+    public reset(affine: number[] = makeIdentity()) {
+        this._affine = affine;
         return this;
     }
 
@@ -62,6 +64,11 @@ export default class TMatrix {
 
     public inverse() {
         this._affine = mat4Inverse(this._affine);
+        return this;
+    }
+
+    public customMatrix(matrix: number[]) {
+        this._affine = matMulMat4(matrix, this._affine);
         return this;
     }
 

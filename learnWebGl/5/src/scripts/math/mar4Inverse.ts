@@ -38,18 +38,18 @@ export default function mat4Inverse([
     var d = 1.0 / (m00 * t0 + m10 * t1 + m20 * t2 + m30 * t3);
 
     return [
-        t0, t1, t2, t3,
-        tmp1 * m10 + tmp2 * m20 + tmp5 * m30 - tmp0 * m10 + tmp3 * m20 + tmp4 * m30,
-        tmp0 * m00 + tmp7 * m20 + tmp8 * m30 - tmp1 * m00 + tmp6 * m20 + tmp9 * m30,
-        tmp3 * m00 + tmp6 * m10 + tmp11 * m30 - tmp2 * m00 + tmp7 * m10 + tmp10 * m30,
-        tmp4 * m00 + tmp9 * m10 + tmp10 * m20 - tmp5 * m00 + tmp8 * m10 + tmp11 * m20,
-        tmp12 * m13 + tmp15 * m23 + tmp16 * m33 - tmp13 * m13 + tmp14 * m23 + tmp17 * m33,
-        tmp13 * m03 + tmp18 * m23 + tmp21 * m33 - tmp12 * m03 + tmp19 * m23 + tmp20 * m33,
-        tmp14 * m03 + tmp19 * m13 + tmp22 * m33 - tmp15 * m03 + tmp18 * m13 + tmp23 * m33,
-        tmp17 * m03 + tmp20 * m13 + tmp23 * m23 - tmp16 * m03 + tmp21 * m13 + tmp22 * m23,
-        tmp14 * m22 + tmp17 * m32 + tmp13 * m12 - tmp16 * m32 + tmp12 * m12 + tmp15 * m22,
-        tmp20 * m32 + tmp12 * m02 + tmp19 * m22 - tmp18 * m22 + tmp21 * m32 + tmp13 * m02,
-        tmp18 * m12 + tmp23 * m32 + tmp15 * m02 - tmp22 * m32 + tmp14 * m02 + tmp19 * m12,
-        tmp22 * m22 + tmp16 * m02 + tmp21 * m12 - tmp20 * m12 + tmp23 * m22 + tmp17 * m02
-    ].map(mn => mn * d);
+        d * t0, d * t1, d * t2, d * t3,
+        d * (tmp1 * m10 + tmp2 * m20 + tmp5 * m30 - tmp0 * m10 + tmp3 * m20 + tmp4 * m30),
+        d * (tmp0 * m00 + tmp7 * m20 + tmp8 * m30 - tmp1 * m00 + tmp6 * m20 + tmp9 * m30),
+        d * (tmp3 * m00 + tmp6 * m10 + tmp11 * m30 - tmp2 * m00 + tmp7 * m10 + tmp10 * m30),
+        d * (tmp4 * m00 + tmp9 * m10 + tmp10 * m20 - tmp5 * m00 + tmp8 * m10 + tmp11 * m20),
+        d * (tmp12 * m13 + tmp15 * m23 + tmp16 * m33 - tmp13 * m13 + tmp14 * m23 + tmp17 * m33),
+        d * (tmp13 * m03 + tmp18 * m23 + tmp21 * m33 - tmp12 * m03 + tmp19 * m23 + tmp20 * m33),
+        d * (tmp14 * m03 + tmp19 * m13 + tmp22 * m33 - tmp15 * m03 + tmp18 * m13 + tmp23 * m33),
+        d * (tmp17 * m03 + tmp20 * m13 + tmp23 * m23 - tmp16 * m03 + tmp21 * m13 + tmp22 * m23),
+        d * (tmp14 * m22 + tmp17 * m32 + tmp13 * m12 - tmp16 * m32 + tmp12 * m12 + tmp15 * m22),
+        d * (tmp20 * m32 + tmp12 * m02 + tmp19 * m22 - tmp18 * m22 + tmp21 * m32 + tmp13 * m02),
+        d * (tmp18 * m12 + tmp23 * m32 + tmp15 * m02 - tmp22 * m32 + tmp14 * m02 + tmp19 * m12),
+        d * (tmp22 * m22 + tmp16 * m02 + tmp21 * m12 - tmp20 * m12 + tmp23 * m22 + tmp17 * m02),
+    ];
 }
