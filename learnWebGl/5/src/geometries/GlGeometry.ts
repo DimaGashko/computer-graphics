@@ -28,9 +28,6 @@ export default class GlGeometry {
         reflectX: false,
         reflectY: false,
         reflectZ: false,
-
-        baseColor: "#fff",
-        baseGlColor: hexToGlColor("#fff"),
     }
 
     constructor(private gl: WebGLRenderingContext, public geometry: Geometry) { 

@@ -12,6 +12,7 @@ import FGeometry from './geometries/FGeometry/FGeometry';
 import Geometry from './geometries/Geometry';
 import GlGeometry from './geometries/GlGeometry';
 import { hexToGlColor } from './scripts/utils';
+import TMatrix from './scripts/TMatrix/TMatrix';
 
 const $: {
     canvas?: HTMLCanvasElement,
@@ -32,14 +33,13 @@ const loc = {
 
     tMatrix: gl.getUniformLocation(program, 'tMatrix'),
     baseColor: gl.getUniformLocation(program, 'baseColor'),
-    geometryBaseColor: gl.getUniformLocation(program, 'geometryBaseColor'),
     time: gl.getUniformLocation(program, 'time'),
 }
 
 const gui = new dat.GUI();
 
 const options = {
-    baseColor: "#0f0",
+    baseColor: "#0b0",
     rotateSpeed: 0.01,
     fieldOfView: Math.PI / 3,
 
@@ -76,6 +76,12 @@ geometries.map(({ options }, i, { length }) => {
     options.translateZ = -900 - z * size * k;
 });
 
+const cameraMatrix = new TMatrix();
+cameraMatrix.rotateY(0);
+cameraMatrix.translate(0, 0, 1000);
+
+const viewMatrix = cameraMatrix.copy().inverse();
+
 initEvents();
 resize();
 initGui();
@@ -109,7 +115,7 @@ function drawFrame() {
     const time = performance.now();
 
     geometries.forEach(({ verticesBuffer, colorsBuffer, geometry, options: gOptions }) => {
-        geometry.tMatrix.rotateY(options.rotateSpeed);
+        geometry.tMatrix.rotateY(options.rotateSpeed * (time - prevTime) / 16);
 
         gl.enableVertexAttribArray(loc.aPosition);
         gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer);
@@ -119,13 +125,11 @@ function drawFrame() {
         gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
         gl.vertexAttribPointer(loc.aColor, 3, gl.UNSIGNED_BYTE, true, 0, 0);
 
-        gl.uniformMatrix4fv(loc.tMatrix, false, geometry.tMatrix.raw);
+        gl.uniformMatrix4fv(loc.tMatrix, false, geometry.tMatrix.tMatrix);
         gl.uniform1f(loc.time, time / 1000);
 
         let { r, g, b } = options.baseGlColor;
         gl.uniform4f(loc.baseColor, r, g, b, 1);
-        ({ r, g, b } = gOptions.baseGlColor);
-        gl.uniform4f(loc.geometryBaseColor, r, g, b, 1);
 
         gl.drawArrays(gl.TRIANGLES, 0, 16 * 6);
     });
@@ -189,6 +193,7 @@ function getActiveGeometryOptions() {
 
 function initGui() {
     gui.domElement.classList.add('gui-root');
+    gui.close();
 
     const baseOptions = gui.addFolder('Base Options');
     let geometryFolder = gui.addFolder(`Geometry`);
@@ -196,7 +201,7 @@ function initGui() {
     baseOptions.open();
     geometryFolder.open();
 
-    baseOptions.addColor(options, 'baseColor').onChange(() => { 
+    baseOptions.addColor(options, 'baseColor').onChange(() => {
         options.baseGlColor = hexToGlColor(options.baseColor);
     });
 
@@ -220,11 +225,6 @@ function initGeometryGui(geometryFolder: dat.GUI) {
     const geometry = getActiveGeometryOptions();
     const update = () => { updateTMatrix(geometry) };
     const { options } = geometry;
-
-    const styles = geometryFolder.addFolder('Styles');
-    styles.addColor(options, 'baseColor').onChange(() => {
-        options.baseGlColor = hexToGlColor(options.baseColor);
-    });
 
     const translate = geometryFolder.addFolder('Translate');
     translate.add(options, 'translateX', -500, 500, 1).onChange(update);

@@ -1,21 +1,22 @@
 import { makeIdentity, makeTranslation, makeShear, makeRotateX, makeRotateY, makeRotateZ, makePerspective, makeReflect, makeScale } from "./affine";
 import matMulMat4 from "../math/matMulMat4";
+import mat4Inverse from "../math/mar4Inverse";
 
 export default class TMatrix {
     private _affine = makeIdentity();
 
-    private _affineStack = [];
-
-    public save() {
-        this._affineStack.push([...this._affine]);
-    }
-    
-    public restore() { 
-        this._affine = this._affineStack.pop();
-    }
-
     public reset() { 
         this._affine = makeIdentity();
+    }
+
+    public copy() { 
+        const tMatrix = new TMatrix();
+        tMatrix.setTMatrix(this.tMatrix);
+        return tMatrix;
+    }
+
+    public setTMatrix(tMatrixRaw: number[]) {
+        this._affine = tMatrixRaw.slice(0, 15);
     }
 
     public translate(dx: number, dy: number, dz: number) {
@@ -50,7 +51,11 @@ export default class TMatrix {
         this._affine = matMulMat4(makePerspective(fieldOfView, aspect, near, far), this._affine);
     }
 
-    public get raw() {
+    public inverse() { 
+        this._affine = mat4Inverse(this._affine);
+    }
+
+    public get tMatrix() {
         return [...this._affine];
     }
 }
