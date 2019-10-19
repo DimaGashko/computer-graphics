@@ -6,8 +6,8 @@ export default class GlGeometry {
 
     public options = {
         translateX: 0,
-        translateY: 100,
-        translateZ: -500,
+        translateY: 0,
+        translateZ: 0,
 
         rotateX: -0.25,
         rotateY: 0.1,
@@ -29,7 +29,7 @@ export default class GlGeometry {
         reflectZ: false,
     }
 
-    constructor(private gl: WebGLRenderingContext, private geometry: Geometry) { 
+    constructor(private gl: WebGLRenderingContext, public geometry: Geometry) { 
         this.verticesBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.verticesBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, geometry.vertices, gl.STATIC_DRAW);

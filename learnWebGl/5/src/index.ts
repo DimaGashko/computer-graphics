@@ -2,7 +2,6 @@ import 'normalize.scss/normalize.scss';
 import './index.scss';
 
 import { throttle } from 'throttle-debounce';
-import hexToRgba from 'hex-to-rgba';
 import * as dat from 'dat.gui';
 
 import vShaderSource from './shaders/v.glsl';
@@ -50,14 +49,20 @@ let screenH = 0;
 let canvasW = 0
 let canvasH = 0
 
-const geometries = new Array(5).fill(0)
+const geometries = new Array(81).fill(0)
     .map(() => new FGeometry())
     .map((geometry: Geometry) => {
         return new GlGeometry(gl, geometry);
     });
 
-geometries.map(({ options }) => {
-    options.translateX = Math.random() * 500 - 250;
+geometries.map(({ options }, i, { length }) => {
+    const side = Math.sqrt(length) ^ 0;
+    const x = i % side;
+    const z = (i / side) ^ 0;
+    const size = 220;
+
+    options.translateX = - (size * side) / 2 + x * 250;
+    options.translateZ = -500 - z * 250;
 });
 
 initEvents();
@@ -127,7 +132,7 @@ function updateMetrics() {
     canvasH = Math.floor(screenH * window.devicePixelRatio);
 }
 
-function updateAllTMatrices() { 
+function updateAllTMatrices() {
     geometries.forEach(g => updateTMatrix(g));
 }
 
@@ -145,7 +150,7 @@ function updateTMatrix(geometry: GlGeometry) {
     } = geometry.options;
 
     tMatrix.reset();
-    tMatrix.perspective(options.fieldOfView, ratio, 1, 2000);
+    tMatrix.perspective(options.fieldOfView, ratio, 1, 3000);
     tMatrix.translate(translateX, translateY, translateZ);
     tMatrix.rotateX(rotateX);
     tMatrix.rotateY(rotateY);
@@ -162,14 +167,14 @@ function updateBaseColor() {
 function initGui() {
     const baseOptions = gui.addFolder('Base Options');
     baseOptions.addColor(options, 'baseColor').onChange(updateBaseColor);
-    baseOptions.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01).onChange(() => { 
+    baseOptions.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01).onChange(() => {
         updateAllTMatrices();
     });
 
     const geometriesFolder = gui.addFolder('Geometries');
     geometriesFolder.open();
 
-    geometries.forEach((geometry, i) => {
+    geometries.slice(0, 5).forEach((geometry, i) => {
         const geometryFolder = geometriesFolder.addFolder(`Geometry ${i + 1}`);
         const update = () => updateTMatrix(geometry);
         const options = geometry.options;
@@ -177,7 +182,7 @@ function initGui() {
         const translate = geometryFolder.addFolder('Translate');
         translate.add(options, 'translateX', -500, 500, 1).onChange(update);
         translate.add(options, 'translateY', -500, 500, 1).onChange(update);
-        translate.add(options, 'translateZ', -1000, 1, 1).onChange(update);
+        translate.add(options, 'translateZ', -2000, 1, 1).onChange(update);
         translate.open();
 
         const rotate = geometryFolder.addFolder('Rotate');
