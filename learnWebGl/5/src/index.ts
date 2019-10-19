@@ -7,12 +7,12 @@ import * as dat from 'dat.gui';
 
 import vShaderSource from './shaders/v.glsl';
 import fShaderSource from './shaders/f.glsl';
-import Vector from './scripts/math/Vector';
 import { createShader, createProgram } from './scripts/webGlUtils';
 
-import TMatrix from './scripts/TMatrix/TMatrix';
 import FGeometry from './geometries/FGeometry/FGeometry';
 import Geometry from './geometries/Geometry';
+import GlGeometry from './geometries/GlGeometry';
+import { hexToGlColor } from './scripts/utils';
 
 const $: {
     canvas?: HTMLCanvasElement,
@@ -22,17 +22,7 @@ const $: {
 $.root = document.querySelector('.app');
 $.canvas = $.root.querySelector('.app__canvas');
 
-const screenSize = new Vector(0, 0);
-const canvasSize = new Vector(0, 0);
-
 const gl = $.canvas.getContext('webgl');
-const gui = new dat.GUI();
-
-const options = {
-    color: "#0f0",
-    fieldOfView: Math.PI / 3,
-}
-
 const vShader = createShader(gl, gl.VERTEX_SHADER, vShaderSource);
 const fShader = createShader(gl, gl.FRAGMENT_SHADER, fShaderSource);
 const program = createProgram(gl, vShader, fShader);
@@ -46,49 +36,29 @@ const loc = {
     time: gl.getUniformLocation(program, 'time'),
 }
 
-const geometries = [
-    new FGeometry(),
-    new FGeometry(),
-    new FGeometry(),
-].map((geometry) => {
+const gui = new dat.GUI();
 
-    const verticesBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, geometry.vertices, gl.STATIC_DRAW);
+const options = {
+    baseColor: "#0f0",
+    fieldOfView: Math.PI / 3,
+}
 
-    const colorsBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, geometry.colors, gl.STATIC_DRAW);
+let baseColor = hexToGlColor(options.baseColor);
 
-    const options = {
-        translateX: 0,
-        translateY: 100,
-        translateZ: -500,
+let screenW = 0;
+let screenH = 0;
+let canvasW = 0
+let canvasH = 0
 
-        rotateX: -0.25,
-        rotateY: 0.1,
-        rotateZ: Math.PI,
+const geometries = new Array(5).fill(0)
+    .map(() => new FGeometry())
+    .map((geometry: Geometry) => {
+        return new GlGeometry(gl, geometry);
+    });
 
-        scaleX: 1,
-        scaleY: 1,
-        scaleZ: 1,
-
-        shearXY: 0,
-        shearYX: 0,
-        shearXZ: 0,
-        shearZX: 0,
-        shearYZ: 0,
-        shearZY: 0,
-
-        reflectX: false,
-        reflectY: false,
-        reflectZ: false,
-    }
-
-    return { geometry, verticesBuffer, colorsBuffer, options };
+geometries.map(({ options }) => {
+    options.translateX = Math.random() * 500 - 250;
 });
-
-const fGeometry = new FGeometry();
 
 initEvents();
 resize();
@@ -113,108 +83,82 @@ function start() {
 }
 
 function drawFrame() {
-    const color = getColor();
-
-    fGeometry.tMatrix.rotateY(0.01);
-
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.enable(gl.DEPTH_TEST);
 
     gl.useProgram(program);
 
-    gl.enableVertexAttribArray(loc.aPosition);
-    gl.bindBuffer(gl.ARRAY_BUFFER, fGeometry.verticesBuffer);
-    gl.vertexAttribPointer(loc.aPosition, 3, gl.FLOAT, false, 0, 0);
+    geometries.forEach(({ verticesBuffer, colorsBuffer, geometry }) => {
+        gl.enableVertexAttribArray(loc.aPosition);
+        gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer);
+        gl.vertexAttribPointer(loc.aPosition, 3, gl.FLOAT, false, 0, 0);
 
-    gl.enableVertexAttribArray(loc.aColor);
-    gl.bindBuffer(gl.ARRAY_BUFFER, fGeometry.colorsBuffer);
-    gl.vertexAttribPointer(loc.aColor, 3, gl.UNSIGNED_BYTE, true, 0, 0);
+        gl.enableVertexAttribArray(loc.aColor);
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
+        gl.vertexAttribPointer(loc.aColor, 3, gl.UNSIGNED_BYTE, true, 0, 0);
 
-    gl.uniformMatrix4fv(loc.tMatrix, false, fGeometry.tMatrix.raw);
-    gl.uniform1f(loc.time, performance.now() / 1000);
-    gl.uniform4f(loc.baseColor, color.r, color.g, color.b, color.a);
+        gl.uniformMatrix4fv(loc.tMatrix, false, geometry.tMatrix.raw);
+        gl.uniform1f(loc.time, performance.now() / 1000);
+        gl.uniform4f(loc.baseColor, baseColor.r, baseColor.g, baseColor.b, baseColor.a);
 
-    gl.drawArrays(gl.TRIANGLES, 0, 16 * 6);
+        gl.drawArrays(gl.TRIANGLES, 0, 16 * 6);
+    });
 }
 
 function resize() {
     updateMetrics();
     updateCanvasSize();
-    updateTMatrix();
+
+    geometries.forEach(g => updateTMatrix(g));
 }
 
 function updateCanvasSize() {
-    $.canvas.width = canvasSize.x;
-    $.canvas.height = canvasSize.y;
+    $.canvas.width = canvasW;
+    $.canvas.height = canvasH;
 
-    gl.viewport(0, 0, canvasSize.x, canvasSize.y);
+    gl.viewport(0, 0, canvasW, canvasH);
 }
 
 function updateMetrics() {
-    screenSize.x = $.root.offsetWidth;
-    screenSize.y = $.root.offsetHeight;
+    screenW = $.root.offsetWidth;
+    screenH = $.root.offsetHeight;
 
-    canvasSize.x = Math.floor(screenSize.x * window.devicePixelRatio);
-    canvasSize.y = Math.floor(screenSize.y * window.devicePixelRatio);
+    canvasW = Math.floor(screenW * window.devicePixelRatio);
+    canvasH = Math.floor(screenH * window.devicePixelRatio);
 }
 
-async function loadImages(sources: string[]) {
-    const images = [];
-    const promises = sources.map(async (src) => {
-        images.push(await loadImg(src));
-    });
+function updateTMatrix(geometry: GlGeometry) {
+    const tMatrix = geometry.geometry.tMatrix;
 
-    await Promise.all(promises);
-    return images;
-}
-
-function loadImg(src: string) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-
-        img.src = src;
-    });
-}
-
-function getColor() {
-    const [r, g, b, a] = hexToRgba(options.color).split(', ')
-        .map(c => c.replace(/\D+/g, ''))
-        .map(c => +c / 255);
-
-    return { r, g, b, a };
-}
-
-function updateTMatrix() {
-    const tMatrix = fGeometry.tMatrix;
-
-    const ratio = canvasSize.x / canvasSize.y;
+    const ratio = canvasW / canvasH;
 
     const {
         reflectX, reflectY, reflectZ,
+        rotateX, rotateY, rotateZ,
         scaleX, scaleY, scaleZ,
         shearXY, shearXZ, shearYX, shearYZ, shearZX, shearZY,
         translateX, translateY, translateZ,
-    } = options;
-
+    } = geometry.options;
 
     tMatrix.reset();
     tMatrix.perspective(options.fieldOfView, ratio, 1, 2000);
     tMatrix.translate(translateX, translateY, translateZ);
-    tMatrix.rotateX(options.rotateX);
-    tMatrix.rotateY(options.rotateY);
-    tMatrix.rotateZ(options.rotateZ);
+    tMatrix.rotateX(rotateX);
+    tMatrix.rotateY(rotateY);
+    tMatrix.rotateZ(rotateZ);
     tMatrix.scale(scaleX, scaleY, scaleZ);
     tMatrix.reflect(reflectX, reflectY, reflectZ);
     tMatrix.shear(shearXY, shearYX, shearXZ, shearZX, shearYZ, shearZY);
 }
 
+function updateBaseColor() {
+    baseColor = hexToGlColor(options.baseColor);
+}
+
 function initGui() {
     const baseOptions = gui.addFolder('Base Options');
-    baseOptions.addColor(options, 'color');
+    baseOptions.addColor(options, 'baseColor').onChange(updateBaseColor);
     baseOptions.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01).onChange(updateTMatrix);
 
     const translate = gui.addFolder('Translate');
