@@ -19,7 +19,7 @@ export default class TMatrix {
     }
 
     public setTMatrix(tMatrixRaw: number[]) {
-        this._affine = tMatrixRaw.slice(0, 15);
+        this._affine = tMatrixRaw.slice(0, 16);
     }
 
     public translate(dx: number, dy: number, dz: number) {

@@ -51,9 +51,9 @@ const options = {
 }
 
 const camera = {
-    translateX: 0,
-    translateY: 0,
-    translateZ: 0,
+    translateX: 10,
+    translateY: 5,
+    translateZ: 7,
 
     rotateX: 0,
     rotateY: 0,
@@ -181,11 +181,12 @@ function updateViewMatrix() {
 
     viewMatrix = new TMatrix()
         .rotateX(rotateX)
+        .translate(translateX, translateY, translateZ)
         .rotateY(rotateY)
         .rotateZ(rotateZ)
-        .translate(translateX, translateY, translateZ)
-        .perspective(fieldOfView, ratio, near, far)
-        .inverse()
+        .inverse();
+
+        
 }
 
 function updateTMatrix(geometry: GlGeometry) {
@@ -199,14 +200,18 @@ function updateTMatrix(geometry: GlGeometry) {
         translateX, translateY, translateZ,
     } = geometry.options;
 
-    tMatrix.reset(viewMatrix.matrix)
+    const { fieldOfView, near, far } = options;
+
+    tMatrix.reset()
+        .perspective(fieldOfView, ratio, near, far)
+        .customMatrix(viewMatrix.matrix)
         .translate(translateX, translateY, translateZ)
         .rotateX(rotateX)
         .rotateY(rotateY)
         .rotateZ(rotateZ)
         .scale(scaleX, scaleY, scaleZ)
         .reflect(reflectX, reflectY, reflectZ)
-        .shear(shearXY, shearYX, shearXZ, shearZX, shearYZ, shearZY);
+        .shear(shearXY, shearYX, shearXZ, shearZX, shearYZ, shearZY)
 }
 
 function getActiveGeometryOptions() {
