@@ -123,12 +123,16 @@ function drawFrame() {
 
     gl.useProgram(program);
 
+    updateViewMatrix();
+
     const time = performance.now();
 
-    //updateAllTMatrices();
+    geometries.forEach((glGeometry) => {
+        const { verticesBuffer, colorsBuffer, geometry, options: gOptions } = glGeometry;
 
-    geometries.forEach(({ verticesBuffer, colorsBuffer, geometry, options: gOptions }) => {
         gOptions.rotateY += (options.rotateSpeed * (time - prevTime) / 16);
+
+        updateTMatrix(glGeometry);
 
         gl.enableVertexAttribArray(loc.aPosition);
         gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer);
@@ -138,7 +142,7 @@ function drawFrame() {
         gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
         gl.vertexAttribPointer(loc.aColor, 3, gl.UNSIGNED_BYTE, true, 0, 0);
 
-        gl.uniformMatrix4fv(loc.tMatrix, false, geometry.tMatrix.tMatrix);
+        gl.uniformMatrix4fv(loc.tMatrix, false, geometry.tMatrix.matrix);
         gl.uniform1f(loc.time, time / 1000);
 
         let { r, g, b } = options.baseGlColor;
@@ -153,8 +157,6 @@ function drawFrame() {
 function resize() {
     updateMetrics();
     updateCanvasSize();
-    updateViewMatrix();
-    updateAllTMatrices();
 }
 
 function updateCanvasSize() {
@@ -187,10 +189,6 @@ function updateViewMatrix() {
         .perspective(fieldOfView, ratio, near, far);
 }
 
-function updateAllTMatrices() {
-    geometries.forEach(g => updateTMatrix(g));
-}
-
 function updateTMatrix(geometry: GlGeometry) {
     const tMatrix = geometry.geometry.tMatrix;
 
@@ -202,7 +200,7 @@ function updateTMatrix(geometry: GlGeometry) {
         translateX, translateY, translateZ,
     } = geometry.options;
 
-    tMatrix.reset(viewMatrix.tMatrix)
+    tMatrix.reset(viewMatrix.matrix)
         .translate(translateX, translateY, translateZ)
         .rotateX(rotateX)
         .rotateY(rotateY)
@@ -232,10 +230,7 @@ function initGui() {
     });
 
     baseOptions.add(options, 'rotateSpeed', -0.1, 0.1, 0.001);
-    baseOptions.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01).onChange(() => {
-        updateViewMatrix();
-        updateAllTMatrices();
-    });
+    baseOptions.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01);
 
     baseOptions.add(options, 'activeGeometry', geometries.map((_, i) => `Geometry ${i + 1}`)).onChange(() => {
         for (let key in geometryFolder.__folders) {

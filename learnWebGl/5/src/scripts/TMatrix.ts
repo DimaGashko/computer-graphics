@@ -4,7 +4,7 @@ import mat4Inverse from "./math/mar4Inverse";
 
 export default class TMatrix {
     constructor(private _affine: number[] = makeIdentity()) {
-        
+
     }
 
     public reset(affine: number[] = makeIdentity()) {
@@ -14,7 +14,7 @@ export default class TMatrix {
 
     public copy() {
         const tMatrix = new TMatrix();
-        tMatrix.setTMatrix(this.tMatrix);
+        tMatrix.setTMatrix(this.matrix);
         return tMatrix;
     }
 
@@ -72,7 +72,7 @@ export default class TMatrix {
         return this;
     }
 
-    public get tMatrix() {
+    public get matrix() {
         return [...this._affine];
     }
 }
