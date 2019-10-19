@@ -259,9 +259,9 @@ function initGeometryGui(geometryFolder: dat.GUI) {
     const { options } = getActiveGeometryOptions();
 
     const translate = geometryFolder.addFolder('Translate');
-    translate.add(options, 'translateX', -500, 500, 1);
-    translate.add(options, 'translateY', -500, 500, 1);
-    translate.add(options, 'translateZ', -2000, 1, 1);
+    translate.add(options, 'translateX', -worldRadius * 0.95, worldRadius);
+    translate.add(options, 'translateY', -worldRadius * 0.95, worldRadius);
+    translate.add(options, 'translateZ', -worldRadius * 0.95, worldRadius);
     translate.open();
 
     const rotate = geometryFolder.addFolder('Rotate');
@@ -271,18 +271,18 @@ function initGeometryGui(geometryFolder: dat.GUI) {
     rotate.open();
 
     const scale = geometryFolder.addFolder('Scale');
-    scale.add(options, 'scaleX', 0, 5, 0.1);
-    scale.add(options, 'scaleY', 0, 5, 0.1);
-    scale.add(options, 'scaleZ', 0, 5, 0.1);
+    scale.add(options, 'scaleX', 0, 6, 0.1);
+    scale.add(options, 'scaleY', 0, 6, 0.1);
+    scale.add(options, 'scaleZ', 0, 6, 0.1);
     scale.open();
 
     const shear = geometryFolder.addFolder('Shear');
-    shear.add(options, 'shearXY', -3, 3, 0.1);
-    shear.add(options, 'shearYX', -3, 3, 0.1);
-    shear.add(options, 'shearXZ', -3, 3, 0.1);
-    shear.add(options, 'shearZX', -3, 3, 0.1);
-    shear.add(options, 'shearYZ', -3, 3, 0.1);
-    shear.add(options, 'shearZY', -3, 3, 0.1);
+    shear.add(options, 'shearXY', -2, 2, 0.05);
+    shear.add(options, 'shearYX', -2, 2, 0.05);
+    shear.add(options, 'shearXZ', -2, 2, 0.05);
+    shear.add(options, 'shearZX', -2, 2, 0.05);
+    shear.add(options, 'shearYZ', -2, 2, 0.05);
+    shear.add(options, 'shearZY', -2, 2, 0.05);
 
     const reflect = geometryFolder.addFolder('Reflect');
     reflect.add(options, 'reflectX');
