@@ -7,12 +7,11 @@ import * as dat from 'dat.gui';
 
 import vShaderSource from './shaders/v.glsl';
 import fShaderSource from './shaders/f.glsl';
-import Vector from '../src/scripts/Vector';
+import Vector from './scripts/math/Vector';
 import { createShader, createProgram } from './scripts/webGlUtils';
 
-import { makeIdentity, makeTranslation, makeScale, makeShear, makeRotateX, makeRotateY, makeRotateZ, makeReflect, makeProjection, makeZToWMatrix, makePerspective } from './affine';
-import f from './geometries/f';
-import matMulMat4 from './scripts/math/matMulMat4';
+import f from './geometries/FGeometry/data/vertices';
+import TMatrix from './scripts/TMatrix/TMatrix';
 
 const $: {
     canvas?: HTMLCanvasElement,
@@ -56,7 +55,7 @@ const options = {
     reflectZ: false,
 }
 
-let affine = makeIdentity();
+const tMatrix = new TMatrix();
 
 const vShader = createShader(gl, gl.VERTEX_SHADER, vShaderSource);
 const fShader = createShader(gl, gl.FRAGMENT_SHADER, fShaderSource);
@@ -65,7 +64,7 @@ const program = createProgram(gl, vShader, fShader);
 const loc = {
     aPosition: gl.getAttribLocation(program, 'a_position'),
     aColor: gl.getAttribLocation(program, 'a_color'),
-    affine: gl.getUniformLocation(program, 'affine'),
+    tMatrix: gl.getUniformLocation(program, 'tMatrix'),
     baseColor: gl.getUniformLocation(program, 'baseColor'),
     time: gl.getUniformLocation(program, 'time'),
 }
@@ -80,7 +79,7 @@ gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array(f.colors), gl.STATIC_DRAW);
 
 initEvents();
 resize();
-updateAffine();
+updateTMatrix();
 start();
 initGui();
 
@@ -104,7 +103,7 @@ function start() {
 function drawFrame() {
     const color = getColor();
 
-    affine = rotateY(affine, 0.01);
+    tMatrix.rotateY(0.01);
 
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -120,7 +119,7 @@ function drawFrame() {
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
     gl.vertexAttribPointer(loc.aColor, 3, gl.UNSIGNED_BYTE, true, 0, 0);
 
-    gl.uniformMatrix4fv(loc.affine, false, affine);
+    gl.uniformMatrix4fv(loc.tMatrix, false, tMatrix.raw);
     gl.uniform1f(loc.time, performance.now() / 1000);
     gl.uniform4f(loc.baseColor, color.r, color.g, color.b, color.a);
 
@@ -176,7 +175,7 @@ function getColor() {
     return { r, g, b, a };
 }
 
-function updateAffine() {
+function updateTMatrix() {
     const {
         reflectX, reflectY, reflectZ,
         scaleX, scaleY, scaleZ,
@@ -186,82 +185,50 @@ function updateAffine() {
 
     const ratio = canvasSize.x / canvasSize.y;
 
-    affine = makeIdentity();
-    affine = perspective(affine, options.fieldOfView, ratio, 1, 2000);
-    affine = translate(affine, translateX, translateY, translateZ);
-    affine = rotateX(affine, options.rotateX);
-    affine = rotateY(affine, options.rotateY);
-    affine = rotateZ(affine, options.rotateZ);
-    affine = reflect(affine, reflectX, reflectY, reflectZ);
-    affine = scale(affine, scaleX, scaleY, scaleZ);
-    affine = shear(affine, shearXY, shearYX, shearXZ, shearZX, shearYZ, shearZY);
-}
-
-function translate(affine: number[], dx: number, dy: number, dz: number) {
-    return matMulMat4(makeTranslation(dx, dy, dz), affine);
-}
-
-function scale(affine: number[], cx: number, cy: number, cz: number) {
-    return matMulMat4(makeScale(cx, cy, cz), affine);
-}
-
-function shear(affine: number[], xy: number, yx: number, xz: number, zx: number, yz: number, zy: number) {
-    return matMulMat4(makeShear(xy, yx, xz, xz, yz, zy), affine);
-}
-
-function rotateX(affine: number[], deg: number) {
-    return matMulMat4(makeRotateX(deg), affine);
-}
-
-function rotateY(affine: number[], deg: number) {
-    return matMulMat4(makeRotateY(deg), affine);
-}
-
-function rotateZ(affine: number[], deg: number) {
-    return matMulMat4(makeRotateZ(deg), affine);
-}
-
-function reflect(affine: number[], cx: boolean, cy: boolean, cz: boolean) {
-    return matMulMat4(makeReflect(cx, cy, cz), affine);
-}
-
-function perspective(affine: number[], fieldOfView: number, aspect: number, near: number, far: number) {
-    return matMulMat4(makePerspective(fieldOfView, aspect, near, far), affine);
+    tMatrix.reset();
+    tMatrix.perspective(options.fieldOfView, ratio, 1, 2000);
+    tMatrix.translate(translateX, translateY, translateZ);
+    tMatrix.rotateX(options.rotateX);
+    tMatrix.rotateY(options.rotateY);
+    tMatrix.rotateZ(options.rotateZ);
+    tMatrix.scale(scaleX, scaleY, scaleZ);
+    tMatrix.reflect(reflectX, reflectY, reflectZ);
+    tMatrix.shear(shearXY, shearYX, shearXZ, shearZX, shearYZ, shearZY);
 }
 
 function initGui() {
     const baseOptions = gui.addFolder('Base Options');
     baseOptions.addColor(options, 'color');
-    baseOptions.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01).onChange(updateAffine);
+    baseOptions.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01).onChange(updateTMatrix);
 
     const translate = gui.addFolder('Translate');
-    translate.add(options, 'translateX', -500, 500, 1).onChange(updateAffine);
-    translate.add(options, 'translateY', -500, 500, 1).onChange(updateAffine);
-    translate.add(options, 'translateZ', -1000, 1, 1).onChange(updateAffine);
+    translate.add(options, 'translateX', -500, 500, 1).onChange(updateTMatrix);
+    translate.add(options, 'translateY', -500, 500, 1).onChange(updateTMatrix);
+    translate.add(options, 'translateZ', -1000, 1, 1).onChange(updateTMatrix);
     translate.open();
 
     const rotate = gui.addFolder('Rotate');
-    rotate.add(options, 'rotateX', -Math.PI, Math.PI, 0.05).onChange(updateAffine);
-    rotate.add(options, 'rotateY', -Math.PI, Math.PI, 0.05).onChange(updateAffine);
-    rotate.add(options, 'rotateZ', -Math.PI, Math.PI, 0.05).onChange(updateAffine);
+    rotate.add(options, 'rotateX', -Math.PI, Math.PI, 0.05).onChange(updateTMatrix);
+    rotate.add(options, 'rotateY', -Math.PI, Math.PI, 0.05).onChange(updateTMatrix);
+    rotate.add(options, 'rotateZ', -Math.PI, Math.PI, 0.05).onChange(updateTMatrix);
     rotate.open();
 
     const scale = gui.addFolder('Scale');
-    scale.add(options, 'scaleX', 0, 5, 0.1).onChange(updateAffine);
-    scale.add(options, 'scaleY', 0, 5, 0.1).onChange(updateAffine);
-    scale.add(options, 'scaleZ', 0, 5, 0.1).onChange(updateAffine);
+    scale.add(options, 'scaleX', 0, 5, 0.1).onChange(updateTMatrix);
+    scale.add(options, 'scaleY', 0, 5, 0.1).onChange(updateTMatrix);
+    scale.add(options, 'scaleZ', 0, 5, 0.1).onChange(updateTMatrix);
     scale.open();
 
     const shear = gui.addFolder('Shear');
-    shear.add(options, 'shearXY', -3, 3, 0.1).onChange(updateAffine);
-    shear.add(options, 'shearYX', -3, 3, 0.1).onChange(updateAffine);
-    shear.add(options, 'shearXZ', -3, 3, 0.1).onChange(updateAffine);
-    shear.add(options, 'shearZX', -3, 3, 0.1).onChange(updateAffine);
-    shear.add(options, 'shearYZ', -3, 3, 0.1).onChange(updateAffine);
-    shear.add(options, 'shearZY', -3, 3, 0.1).onChange(updateAffine);
+    shear.add(options, 'shearXY', -3, 3, 0.1).onChange(updateTMatrix);
+    shear.add(options, 'shearYX', -3, 3, 0.1).onChange(updateTMatrix);
+    shear.add(options, 'shearXZ', -3, 3, 0.1).onChange(updateTMatrix);
+    shear.add(options, 'shearZX', -3, 3, 0.1).onChange(updateTMatrix);
+    shear.add(options, 'shearYZ', -3, 3, 0.1).onChange(updateTMatrix);
+    shear.add(options, 'shearZY', -3, 3, 0.1).onChange(updateTMatrix);
 
     const reflect = gui.addFolder('Reflect');
-    reflect.add(options, 'reflectX').onChange(updateAffine);
-    reflect.add(options, 'reflectY').onChange(updateAffine);
-    reflect.add(options, 'reflectZ').onChange(updateAffine);
+    reflect.add(options, 'reflectX').onChange(updateTMatrix);
+    reflect.add(options, 'reflectY').onChange(updateTMatrix);
+    reflect.add(options, 'reflectZ').onChange(updateTMatrix);
 }
