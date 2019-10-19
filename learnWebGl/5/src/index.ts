@@ -13,7 +13,6 @@ import Geometry from './geometries/Geometry';
 import GlGeometry from './geometries/GlGeometry';
 import { hexToGlColor } from './scripts/utils';
 import TMatrix from './scripts/TMatrix';
-import { makePerspective } from './scripts/affine';
 
 const $: {
     canvas?: HTMLCanvasElement,
@@ -71,7 +70,7 @@ let ratio = 0;
 
 let viewMatrix: TMatrix;
 
-const geometries = new Array(10000).fill(0)
+const geometries = new Array(512).fill(0)
     .map(() => new FGeometry())
     .map((geometry: Geometry) => {
         return new GlGeometry(gl, geometry);
@@ -217,13 +216,11 @@ function getActiveGeometryOptions() {
 
 function initGui() {
     gui.domElement.classList.add('gui-root');
-    gui.close();
 
     const baseOptions = gui.addFolder('Base Options');
-    let geometryFolder = gui.addFolder(`Geometry`);
-
-    baseOptions.open();
-    geometryFolder.open();
+    const cameraFolder = gui.addFolder('Camera');
+    const geometryFolder = gui.addFolder(`Active Geometry`);
+    cameraFolder.open();
 
     baseOptions.addColor(options, 'baseColor').onChange(() => {
         options.baseGlColor = hexToGlColor(options.baseColor);
@@ -239,6 +236,14 @@ function initGui() {
 
         initGeometryGui(geometryFolder);
     });
+
+    cameraFolder.add(camera, 'translateX', -2500, 500);
+    cameraFolder.add(camera, 'translateY', -2500, 500);
+    cameraFolder.add(camera, 'translateZ', -2500, 500);
+
+    cameraFolder.add(camera, 'rotateX', -Math.PI, Math.PI, 0.05);
+    cameraFolder.add(camera, 'rotateY', -Math.PI, Math.PI, 0.05);
+    cameraFolder.add(camera, 'rotateZ', -Math.PI, Math.PI, 0.05);
 
     initGeometryGui(geometryFolder);
 }
