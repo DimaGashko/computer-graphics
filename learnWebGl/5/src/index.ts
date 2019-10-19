@@ -12,6 +12,7 @@ import { createShader, createProgram } from './scripts/webGlUtils';
 
 import TMatrix from './scripts/TMatrix/TMatrix';
 import FGeometry from './geometries/FGeometry/FGeometry';
+import Geometry from './geometries/Geometry';
 
 const $: {
     canvas?: HTMLCanvasElement,
@@ -30,32 +31,7 @@ const gui = new dat.GUI();
 const options = {
     color: "#0f0",
     fieldOfView: Math.PI / 3,
-
-    translateX: 0,
-    translateY: 100,
-    translateZ: -500,
-
-    rotateX: -0.25,
-    rotateY: 0.1,
-    rotateZ: Math.PI,
-
-    scaleX: 1,
-    scaleY: 1,
-    scaleZ: 1,
-
-    shearXY: 0,
-    shearYX: 0,
-    shearXZ: 0,
-    shearZX: 0,
-    shearYZ: 0,
-    shearZY: 0,
-
-    reflectX: false,
-    reflectY: false,
-    reflectZ: false,
 }
-
-const fGeometry = new FGeometry();
 
 const vShader = createShader(gl, gl.VERTEX_SHADER, vShaderSource);
 const fShader = createShader(gl, gl.FRAGMENT_SHADER, fShaderSource);
@@ -70,14 +46,49 @@ const loc = {
     time: gl.getUniformLocation(program, 'time'),
 }
 
-const positionBuffer = gl.createBuffer();
-const colorBuffer = gl.createBuffer();
+const geometries = [
+    new FGeometry(),
+    new FGeometry(),
+    new FGeometry(),
+].map((geometry) => {
 
-gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, fGeometry.vertices, gl.STATIC_DRAW);
+    const verticesBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, geometry.vertices, gl.STATIC_DRAW);
 
-gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, fGeometry.colors, gl.STATIC_DRAW);
+    const colorsBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, geometry.colors, gl.STATIC_DRAW);
+
+    const options = {
+        translateX: 0,
+        translateY: 100,
+        translateZ: -500,
+
+        rotateX: -0.25,
+        rotateY: 0.1,
+        rotateZ: Math.PI,
+
+        scaleX: 1,
+        scaleY: 1,
+        scaleZ: 1,
+
+        shearXY: 0,
+        shearYX: 0,
+        shearXZ: 0,
+        shearZX: 0,
+        shearYZ: 0,
+        shearZY: 0,
+
+        reflectX: false,
+        reflectY: false,
+        reflectZ: false,
+    }
+
+    return { geometry, verticesBuffer, colorsBuffer, options };
+});
+
+const fGeometry = new FGeometry();
 
 initEvents();
 resize();
@@ -113,11 +124,11 @@ function drawFrame() {
     gl.useProgram(program);
 
     gl.enableVertexAttribArray(loc.aPosition);
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, fGeometry.verticesBuffer);
     gl.vertexAttribPointer(loc.aPosition, 3, gl.FLOAT, false, 0, 0);
 
     gl.enableVertexAttribArray(loc.aColor);
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, fGeometry.colorsBuffer);
     gl.vertexAttribPointer(loc.aColor, 3, gl.UNSIGNED_BYTE, true, 0, 0);
 
     gl.uniformMatrix4fv(loc.tMatrix, false, fGeometry.tMatrix.raw);
@@ -179,7 +190,7 @@ function getColor() {
 
 function updateTMatrix() {
     const tMatrix = fGeometry.tMatrix;
-    
+
     const ratio = canvasSize.x / canvasSize.y;
 
     const {
