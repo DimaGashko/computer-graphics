@@ -77,7 +77,7 @@ export function makePerspective(fieldOfView: number, aspect: number, near: numbe
 
     return [
         f / aspect, 0, 0, 0,
-        0, f, 0, 0,
+        0, -f, 0, 0,
         0, 0, (near + far) * rangeInv, -1,
         0, 0, near * far * rangeInv * 2, 0
     ];

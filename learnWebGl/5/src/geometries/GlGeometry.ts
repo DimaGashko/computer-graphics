@@ -9,9 +9,9 @@ export default class GlGeometry {
         translateY: 0,
         translateZ: 0,
 
-        rotateX: -0.25,
-        rotateY: 0.1,
-        rotateZ: Math.PI,
+        rotateX: 0,
+        rotateY: 0,
+        rotateZ: 0,
 
         scaleX: 1,
         scaleY: 1,

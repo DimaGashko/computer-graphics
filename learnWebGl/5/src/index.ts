@@ -175,17 +175,17 @@ function updateMetrics() {
     ratio = canvasH / canvasH;
 }
 
-function updateViewMatrix() { 
+function updateViewMatrix() {
     const { fieldOfView, near, far } = options;
     const { translateX, translateY, translateZ, rotateX, rotateY, rotateZ } = camera;
-    
+
     viewMatrix = new TMatrix()
-        .rotateY(rotateX)
+        .rotateX(rotateX)
         .rotateY(rotateY)
         .rotateZ(rotateZ)
         .translate(translateX, translateY, translateZ)
+        .perspective(fieldOfView, ratio, near, far)
         .inverse()
-        .perspective(fieldOfView, ratio, near, far);
 }
 
 function updateTMatrix(geometry: GlGeometry) {
