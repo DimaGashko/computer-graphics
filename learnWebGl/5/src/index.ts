@@ -1,20 +1,22 @@
 import 'normalize.scss/normalize.scss';
 import './index.scss';
 
+import vShaderSource from './shaders/v.glsl';
+import fShaderSource from './shaders/f.glsl';
+
 import { throttle } from 'throttle-debounce';
 import * as dat from 'dat.gui';
 
-import vShaderSource from './shaders/v.glsl';
-import fShaderSource from './shaders/f.glsl';
 import { createShader, createProgram } from './scripts/webGlUtils';
+import { hexToGlColor } from './scripts/utils';
+import { makePerspective } from './scripts/affine';
+import matMulMat4 from './scripts/math/matMulMat4';
+import TMatrix from './scripts/TMatrix';
 
 import FGeometry from './geometries/FGeometry/FGeometry';
 import Geometry from './geometries/Geometry';
 import GlGeometry from './geometries/GlGeometry';
-import { hexToGlColor } from './scripts/utils';
-import TMatrix from './scripts/TMatrix';
-import matMulMat4 from './scripts/math/matMulMat4';
-import { makePerspective } from './scripts/affine';
+import FpsCorrection from './scripts/FpsCorrection';
 
 const $: {
     canvas?: HTMLCanvasElement,
@@ -39,8 +41,9 @@ const loc = {
 }
 
 const gui = new dat.GUI();
+const fpsCorrection = new FpsCorrection().start();
 
-const worldRadius = 25000;
+const worldRadius = 2500;
 
 const options = {
     baseColor: "#0b0",
@@ -57,7 +60,7 @@ const options = {
 const camera = {
     translateX: 0,
     translateY: 0,
-    translateZ: 0,
+    translateZ: 1500,
 
     rotateX: 0,
     rotateY: 0,
@@ -101,24 +104,6 @@ resize();
 initGui();
 start();
 
-function initEvents() {
-    window.addEventListener('resize', throttle(1000, () => {
-        resize();
-    }));
-
-    window.addEventListener('load', () => {
-        resize();
-    });
-}
-
-function start() {
-    requestAnimationFrame(function tik() {
-        drawFrame();
-        requestAnimationFrame(tik);
-    });
-}
-
-let prevTime = performance.now() / 1000;
 function drawFrame() {
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -126,14 +111,13 @@ function drawFrame() {
 
     gl.useProgram(program);
 
+    fpsCorrection.update();
     updateViewMatrix();
-
-    const time = performance.now();
 
     geometries.forEach((glGeometry) => {
         const { verticesBuffer, colorsBuffer, geometry, options: gOptions } = glGeometry;
 
-        gOptions.rotateY += (options.rotateSpeed * (time - prevTime) / 16);
+        gOptions.rotateY += options.rotateSpeed * fpsCorrection.val;
 
         updateTMatrix(glGeometry);
 
@@ -146,37 +130,13 @@ function drawFrame() {
         gl.vertexAttribPointer(loc.aColor, 3, gl.UNSIGNED_BYTE, true, 0, 0);
 
         gl.uniformMatrix4fv(loc.tMatrix, false, geometry.tMatrix.matrix);
-        gl.uniform1f(loc.time, time / 1000);
+        gl.uniform1f(loc.time, performance.now() / 1000);
 
         let { r, g, b } = options.baseGlColor;
         gl.uniform4f(loc.baseColor, r, g, b, 1);
 
         gl.drawArrays(gl.TRIANGLES, 0, geometry.primitiveCount);
     });
-
-    prevTime = time;
-}
-
-function resize() {
-    updateMetrics();
-    updateCanvasSize();
-}
-
-function updateCanvasSize() {
-    $.canvas.width = canvasW;
-    $.canvas.height = canvasH;
-
-    gl.viewport(0, 0, canvasW, canvasH);
-}
-
-function updateMetrics() {
-    screenW = $.canvas.clientWidth;
-    screenH = $.canvas.clientHeight;
-
-    canvasW = Math.floor(screenW * window.devicePixelRatio);
-    canvasH = Math.floor(screenH * window.devicePixelRatio);
-
-    ratio = canvasH / canvasH;
 }
 
 function updateViewMatrix() {
@@ -215,6 +175,45 @@ function updateTMatrix(geometry: GlGeometry) {
         .scale(scaleX, scaleY, scaleZ)
         .reflect(reflectX, reflectY, reflectZ)
         .shear(shearXY, shearYX, shearXZ, shearZX, shearYZ, shearZY)
+}
+
+function start() {
+    requestAnimationFrame(function tik() {
+        drawFrame();
+        requestAnimationFrame(tik);
+    });
+}
+
+function initEvents() {
+    window.addEventListener('resize', throttle(1000, () => {
+        resize();
+    }));
+
+    window.addEventListener('load', () => {
+        resize();
+    });
+}
+
+function resize() {
+    updateMetrics();
+    updateCanvasSize();
+}
+
+function updateCanvasSize() {
+    $.canvas.width = canvasW;
+    $.canvas.height = canvasH;
+
+    gl.viewport(0, 0, canvasW, canvasH);
+}
+
+function updateMetrics() {
+    screenW = $.canvas.clientWidth;
+    screenH = $.canvas.clientHeight;
+
+    canvasW = Math.floor(screenW * window.devicePixelRatio);
+    canvasH = Math.floor(screenH * window.devicePixelRatio);
+
+    ratio = canvasH / canvasH;
 }
 
 function getActiveGeometryOptions() {
