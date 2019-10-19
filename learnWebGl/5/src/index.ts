@@ -226,8 +226,10 @@ function initGui() {
 
     const baseOptions = gui.addFolder('Base Options');
     const cameraFolder = gui.addFolder('Camera');
-    const geometryFolder = gui.addFolder(`Active Geometry`);
+    const geometryFolder = gui.addFolder(`Geometry`);
+
     cameraFolder.open();
+    geometryFolder.open();
 
     baseOptions.addColor(options, 'baseColor').onChange(() => {
         options.baseGlColor = hexToGlColor(options.baseColor);
@@ -235,14 +237,6 @@ function initGui() {
 
     baseOptions.add(options, 'rotateSpeed', -0.1, 0.1, 0.001);
     baseOptions.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01);
-
-    baseOptions.add(options, 'activeGeometry', geometries.map((_, i) => `Geometry ${i + 1}`)).onChange(() => {
-        for (let key in geometryFolder.__folders) {
-            geometryFolder.removeFolder(geometryFolder.__folders[key]);
-        }
-
-        initGeometryGui(geometryFolder);
-    });
 
     cameraFolder.add(camera, 'translateX', -worldRadius, worldRadius);
     cameraFolder.add(camera, 'translateY', -worldRadius, worldRadius);
@@ -256,36 +250,44 @@ function initGui() {
 }
 
 function initGeometryGui(geometryFolder: dat.GUI) {
-    const { options } = getActiveGeometryOptions();
+    const { options: gOptions } = getActiveGeometryOptions();
+
+    geometryFolder.add(options, 'activeGeometry', geometries.map((_, i) => `Geometry ${i + 1}`)).onChange(() => {
+        for (let key in geometryFolder.__folders) {
+            geometryFolder.removeFolder(geometryFolder.__folders[key]);
+        }
+
+        initGeometryGui(geometryFolder);
+    });
 
     const translate = geometryFolder.addFolder('Translate');
-    translate.add(options, 'translateX', -worldRadius * 0.95, worldRadius);
-    translate.add(options, 'translateY', -worldRadius * 0.95, worldRadius);
-    translate.add(options, 'translateZ', -worldRadius * 0.95, worldRadius);
+    translate.add(gOptions, 'translateX', -worldRadius * 0.95, worldRadius);
+    translate.add(gOptions, 'translateY', -worldRadius * 0.95, worldRadius);
+    translate.add(gOptions, 'translateZ', -worldRadius * 0.95, worldRadius);
     translate.open();
 
     const rotate = geometryFolder.addFolder('Rotate');
-    rotate.add(options, 'rotateX', -Math.PI, Math.PI, 0.05);
-    rotate.add(options, 'rotateY', -Math.PI, Math.PI, 0.05);
-    rotate.add(options, 'rotateZ', -Math.PI, Math.PI, 0.05);
+    rotate.add(gOptions, 'rotateX', -Math.PI, Math.PI, 0.05);
+    rotate.add(gOptions, 'rotateY', -Math.PI, Math.PI, 0.05);
+    rotate.add(gOptions, 'rotateZ', -Math.PI, Math.PI, 0.05);
     rotate.open();
 
     const scale = geometryFolder.addFolder('Scale');
-    scale.add(options, 'scaleX', 0, 6, 0.1);
-    scale.add(options, 'scaleY', 0, 6, 0.1);
-    scale.add(options, 'scaleZ', 0, 6, 0.1);
+    scale.add(gOptions, 'scaleX', 0, 6, 0.1);
+    scale.add(gOptions, 'scaleY', 0, 6, 0.1);
+    scale.add(gOptions, 'scaleZ', 0, 6, 0.1);
     scale.open();
 
     const shear = geometryFolder.addFolder('Shear');
-    shear.add(options, 'shearXY', -2, 2, 0.05);
-    shear.add(options, 'shearYX', -2, 2, 0.05);
-    shear.add(options, 'shearXZ', -2, 2, 0.05);
-    shear.add(options, 'shearZX', -2, 2, 0.05);
-    shear.add(options, 'shearYZ', -2, 2, 0.05);
-    shear.add(options, 'shearZY', -2, 2, 0.05);
+    shear.add(gOptions, 'shearXY', -2, 2, 0.05);
+    shear.add(gOptions, 'shearYX', -2, 2, 0.05);
+    shear.add(gOptions, 'shearXZ', -2, 2, 0.05);
+    shear.add(gOptions, 'shearZX', -2, 2, 0.05);
+    shear.add(gOptions, 'shearYZ', -2, 2, 0.05);
+    shear.add(gOptions, 'shearZY', -2, 2, 0.05);
 
     const reflect = geometryFolder.addFolder('Reflect');
-    reflect.add(options, 'reflectX');
-    reflect.add(options, 'reflectY');
-    reflect.add(options, 'reflectZ');
+    reflect.add(gOptions, 'reflectX');
+    reflect.add(gOptions, 'reflectY');
+    reflect.add(gOptions, 'reflectZ');
 }
