@@ -32,6 +32,7 @@ const loc = {
 
     tMatrix: gl.getUniformLocation(program, 'tMatrix'),
     baseColor: gl.getUniformLocation(program, 'baseColor'),
+    geometryBaseColor: gl.getUniformLocation(program, 'geometryBaseColor'),
     time: gl.getUniformLocation(program, 'time'),
 }
 
@@ -39,12 +40,14 @@ const gui = new dat.GUI();
 
 const options = {
     baseColor: "#0f0",
+    rotateSpeed: 0.01,
     fieldOfView: Math.PI / 3,
 
     activeGeometry: 'Geometry 1',
+    baseGlColor: null,
 }
 
-let baseColor = hexToGlColor(options.baseColor);
+options.baseGlColor = hexToGlColor(options.baseColor);
 
 let screenW = 0;
 let screenH = 0;
@@ -103,10 +106,10 @@ function drawFrame() {
 
     gl.useProgram(program);
 
-    const time = performance.now() / 1000;
+    const time = performance.now();
 
-    geometries.forEach(({ verticesBuffer, colorsBuffer, geometry }, i) => {
-        geometry.tMatrix.rotateY((time - prevTime) / 5);
+    geometries.forEach(({ verticesBuffer, colorsBuffer, geometry, options: gOptions }) => {
+        geometry.tMatrix.rotateY(options.rotateSpeed);
 
         gl.enableVertexAttribArray(loc.aPosition);
         gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer);
@@ -117,8 +120,12 @@ function drawFrame() {
         gl.vertexAttribPointer(loc.aColor, 3, gl.UNSIGNED_BYTE, true, 0, 0);
 
         gl.uniformMatrix4fv(loc.tMatrix, false, geometry.tMatrix.raw);
-        gl.uniform4f(loc.baseColor, baseColor.r, baseColor.g, baseColor.b, baseColor.a);
-        gl.uniform1f(loc.time, time);
+        gl.uniform1f(loc.time, time / 1000);
+
+        let { r, g, b } = options.baseGlColor;
+        gl.uniform4f(loc.baseColor, r, g, b, 1);
+        ({ r, g, b } = gOptions.baseGlColor);
+        gl.uniform4f(loc.geometryBaseColor, r, g, b, 1);
 
         gl.drawArrays(gl.TRIANGLES, 0, 16 * 6);
     });
@@ -175,10 +182,6 @@ function updateTMatrix(geometry: GlGeometry) {
     tMatrix.shear(shearXY, shearYX, shearXZ, shearZX, shearYZ, shearZY);
 }
 
-function updateBaseColor() {
-    baseColor = hexToGlColor(options.baseColor);
-}
-
 function getActiveGeometryOptions() {
     const index = +options.activeGeometry.replace(/\D+/g, '') - 1;
     return geometries[index];
@@ -193,10 +196,15 @@ function initGui() {
     baseOptions.open();
     geometryFolder.open();
 
-    baseOptions.addColor(options, 'baseColor').onChange(updateBaseColor);
+    baseOptions.addColor(options, 'baseColor').onChange(() => { 
+        options.baseGlColor = hexToGlColor(options.baseColor);
+    });
+
+    baseOptions.add(options, 'rotateSpeed', -0.1, 0.1, 0.001);
     baseOptions.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01).onChange(() => {
         updateAllTMatrices();
     });
+
     baseOptions.add(options, 'activeGeometry', geometries.map((_, i) => `Geometry ${i + 1}`)).onChange(() => {
         for (let key in geometryFolder.__folders) {
             geometryFolder.removeFolder(geometryFolder.__folders[key]);
@@ -212,6 +220,11 @@ function initGeometryGui(geometryFolder: dat.GUI) {
     const geometry = getActiveGeometryOptions();
     const update = () => { updateTMatrix(geometry) };
     const { options } = geometry;
+
+    const styles = geometryFolder.addFolder('Styles');
+    styles.addColor(options, 'baseColor').onChange(() => {
+        options.baseGlColor = hexToGlColor(options.baseColor);
+    });
 
     const translate = geometryFolder.addFolder('Translate');
     translate.add(options, 'translateX', -500, 500, 1).onChange(update);

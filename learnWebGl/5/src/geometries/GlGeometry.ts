@@ -1,4 +1,5 @@
 import Geometry from "./Geometry";
+import { hexToGlColor } from "../scripts/utils";
 
 export default class GlGeometry {
     public verticesBuffer: WebGLBuffer;
@@ -27,6 +28,9 @@ export default class GlGeometry {
         reflectX: false,
         reflectY: false,
         reflectZ: false,
+
+        baseColor: "#fff",
+        baseGlColor: hexToGlColor("#fff"),
     }
 
     constructor(private gl: WebGLRenderingContext, public geometry: Geometry) { 
