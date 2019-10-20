@@ -10,6 +10,4 @@ export default class CubeGeometry extends Geometry {
     public get colors(): Uint8Array {
         return new Uint8Array(colors);
     }
-
-   
 }

@@ -321,7 +321,6 @@ function initEvents() {
 
     $.canvas.addEventListener('mousedown', () => {
         lockPointer();
-        startFullscreen();
     });
 
     $.canvas.addEventListener('mousemove', ({ movementX, movementY }) => {
