@@ -79,6 +79,9 @@ let canvasW = 0;
 let canvasH = 0;
 let ratio = 0;
 
+let curMovementX = 0;
+let curMovementY = 0;
+
 let viewMatrix: TMatrix;
 
 const geometries = new Array(512).fill(0)
@@ -116,6 +119,8 @@ function drawFrame() {
     gl.useProgram(program);
 
     fpsCorrection.update();
+
+    updateCamera();
     updateViewMatrix();
 
     geometries.forEach((glGeometry) => {
@@ -141,6 +146,12 @@ function drawFrame() {
 
         gl.drawArrays(gl.TRIANGLES, 0, geometry.primitiveCount);
     });
+}
+
+function updateCamera() {
+    console.log(curMovementX, curMovementY);
+    curMovementX = 0;
+    curMovementY = 0;
 }
 
 function updateViewMatrix() {
@@ -199,6 +210,11 @@ function initEvents() {
 
     $.canvas.addEventListener('click', () => {
         lockPointer();
+    });
+
+    $.canvas.addEventListener('mousemove', ({ movementX, movementY }) => {
+        curMovementX += movementX;
+        curMovementY += movementY;
     });
 
     document.addEventListener('pointerlockchange', () => {
