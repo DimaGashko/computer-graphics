@@ -48,7 +48,7 @@ const fpsCorrection = new FpsCorrection().start();
 const worldRadius = 2500;
 
 const options = {
-    baseColor: "#0b0",
+    baseColor: "#888",
     rotateSpeed: 0.01,
 
     fieldOfView: Math.PI / 3,
