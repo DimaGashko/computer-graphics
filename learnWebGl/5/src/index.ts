@@ -18,6 +18,7 @@ import FGeometry from './geometries/FGeometry/FGeometry';
 import Geometry from './geometries/Geometry';
 import GlGeometry from './geometries/GlGeometry';
 import FpsCorrection from './scripts/FpsCorrection';
+import CubeGeometry from './geometries/CubeGeometry/CubeGeometry';
 
 const $: {
     canvas?: HTMLCanvasElement,
@@ -138,6 +139,22 @@ geometries.push(...[
         return glGeometry;
     })
 );
+
+(function () { 
+    const ground = new CubeGeometry();
+    const glGeometry = new GlGeometry(gl, ground);
+    const { options } = glGeometry;
+
+    options.translateX = 0;
+    options.translateY = -1400;
+    options.translateZ = 300;
+
+    // options.scaleX = worldRadius;
+    // options.scaleY = worldRadius;
+    // options.scaleZ = worldRadius;
+
+    geometries.push(glGeometry);
+}());
 
 options.baseGlColor = hexToGlColor(options.baseColor);
 
