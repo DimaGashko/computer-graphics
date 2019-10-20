@@ -74,7 +74,16 @@ const camera = {
     moveMode: 'keyboard',
 }
 
-options.baseGlColor = hexToGlColor(options.baseColor);
+const KEYS = {
+    forward: 87,
+    back: 83,
+    right: 68,
+    left: 65,
+    up: 32,
+    down: 16,
+};
+
+const pressedKeys: Map<string, boolean> = new Map();
 
 let screenW = 0;
 let screenH = 0;
@@ -127,6 +136,8 @@ geometries.push(...[
     })
 );
 
+options.baseGlColor = hexToGlColor(options.baseColor);
+
 initEvents();
 resize();
 initGui();
@@ -171,7 +182,12 @@ function drawFrame() {
 
 function updateCamera() {
     updateCameraAngle();
-    updateCameraCoords();
+
+    if (camera.moveMode === 'auto') {
+        updateCameraCoordsAuto(); 
+    } else {
+        updateCameraCoordsByKeyboard();
+    }
 }
 
 function updateCameraAngle() { 
@@ -184,12 +200,36 @@ function updateCameraAngle() {
     curMovementY = 0;
 }
 
-function updateCameraCoords() { 
-    if (camera.moveMode !== 'auto') return;
+function updateCameraCoordsAuto() { 
     const { speed, rotateX, rotateY } = camera;
 
     camera.translateZ -= speed * Math.cos(rotateY);
     camera.translateY -= speed * Math.sin(rotateX);
+    camera.translateX += speed * Math.sin(rotateY);
+}
+
+function updateCameraCoordsByKeyboard() {
+    const { speed } = camera;
+    const normalAngle = Math.PI / 2;
+
+    let rotateX = 0;
+    if (pressedKeys[KEYS.up]) rotateX += normalAngle;
+    if (pressedKeys[KEYS.down]) rotateX -= normalAngle;
+    camera.translateY -= speed * Math.sin(rotateX);
+
+    let y = 0;
+    let z = 0;
+
+    if (pressedKeys[KEYS.forward]) z++;
+    if (pressedKeys[KEYS.back]) z--;
+
+    if (pressedKeys[KEYS.left]) y--;
+    if (pressedKeys[KEYS.right]) y++;
+
+    if (y === 0 && z === 0) return;
+    const rotateY = Math.atan2(y, z);
+
+    camera.translateZ -= speed * Math.cos(rotateY);
     camera.translateX += speed * Math.sin(rotateY);
 }
 
@@ -263,6 +303,14 @@ function initEvents() {
         } else {
             $.root.classList.remove('app--pointer-lock');
         }
+    });
+
+    document.addEventListener('keydown', ({ keyCode }) => {
+        return pressedKeys[keyCode] = true
+    });
+
+    document.addEventListener('keyup', ({ keyCode }) => {
+        return pressedKeys[keyCode] = false;
     });
 }
 
