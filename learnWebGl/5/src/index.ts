@@ -103,8 +103,26 @@ geometries.map(({ options }, i, { length }) => {
 
     options.translateX = offset + x * size * k;
     options.translateY = offset + y * size * k;
-    options.translateZ = -offset - z * size * k;
+    options.translateZ = -offset - z * size * k * 1.5;
 });
+
+geometries.push(...[
+    [worldRadius, 0, worldRadius],
+    [worldRadius, 0, -worldRadius],
+    [-worldRadius, 0, worldRadius],
+    [-worldRadius, 0, -worldRadius],
+]
+    .map(coords => coords.map(c => c * 0.8))
+    .map(([x, y, z]) => {
+        const glGeometry = new GlGeometry(gl, new FGeometry());
+
+        glGeometry.options.translateX = x;
+        glGeometry.options.translateY = y;
+        glGeometry.options.translateZ = z;
+
+        return glGeometry;
+    })
+);
 
 initEvents();
 resize();
@@ -217,6 +235,7 @@ function initEvents() {
     });
 
     $.canvas.addEventListener('mousemove', ({ movementX, movementY }) => {
+        if (document.pointerLockElement !== $.canvas) return;
         curMovementX += movementX;
         curMovementY += movementY;
     });
@@ -249,11 +268,6 @@ function toggleFullscreen() {
 function lockPointer() {
     if (document.pointerLockElement === $.canvas) return;
     $.canvas.requestPointerLock();
-}
-
-function unlockPointer() {
-    if (document.pointerLockElement !== $.canvas) return;
-    document.exitPointerLock();
 }
 
 function updateCanvasSize() {
