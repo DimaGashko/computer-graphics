@@ -229,8 +229,11 @@ function updateCameraCoordsByKeyboard() {
     if (y === 0 && z === 0) return;
     const rotateY = Math.atan2(y, z);
 
-    camera.translateZ -= speed * Math.cos(rotateY);
-    camera.translateX += speed * Math.sin(rotateY);
+    const dx = speed * Math.sin(rotateY);
+    const dz = speed * Math.cos(rotateY);
+
+    camera.translateX += dx * Math.cos(-camera.rotateY) - dz * Math.sin(-camera.rotateY);
+    camera.translateZ -= dx * Math.sin(-camera.rotateY) + dz * Math.cos(-camera.rotateY);
 }
 
 function updateViewMatrix() {
