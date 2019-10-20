@@ -197,16 +197,16 @@ function initEvents() {
         resize();
     });
 
-    $.canvas.addEventListener('focus', () => {
-        lockPointer();
-    });
-
     $.canvas.addEventListener('click', () => {
         lockPointer();
     });
 
-    $.canvas.addEventListener('blur', () => {
-        unlockPointer();
+    document.addEventListener('pointerlockchange', () => {
+        if (document.pointerLockElement === $.canvas) {
+            $.root.classList.add('app--pointer-lock');
+        } else {
+            $.root.classList.remove('app--pointer-lock');
+        }
     });
 }
 
@@ -274,7 +274,7 @@ function initGui() {
     });
 
     baseOptions.add(options, 'toggleFullscreen');
-    
+
     baseOptions.add(options, 'rotateSpeed', -0.1, 0.1, 0.001);
     baseOptions.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01);
 
