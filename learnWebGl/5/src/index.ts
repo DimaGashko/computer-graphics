@@ -146,12 +146,12 @@ geometries.push(...[
     const { options } = glGeometry;
 
     options.translateX = 0;
-    options.translateY = -1400;
-    options.translateZ = 300;
+    options.translateY = worldRadius;
+    options.translateZ = 0  ;
 
-    // options.scaleX = worldRadius;
-    // options.scaleY = worldRadius;
-    // options.scaleZ = worldRadius;
+    options.scaleX = worldRadius;
+    options.scaleY = worldRadius;
+    options.scaleZ = worldRadius;
 
     geometries.push(glGeometry);
 }());
@@ -178,8 +178,10 @@ function drawFrame() {
     geometries.forEach((glGeometry) => {
         const { verticesBuffer, colorsBuffer, geometry, options: gOptions } = glGeometry;
 
-        gOptions.rotateY += options.rotateSpeed * fpsCorrection.val;
-
+        if (gOptions.autoRotate) {
+            gOptions.rotateY += options.rotateSpeed * fpsCorrection.val;
+        }
+        
         updateTMatrix(glGeometry);
 
         gl.enableVertexAttribArray(loc.aPosition);
@@ -440,6 +442,7 @@ function initGeometryGui(geometryFolder: dat.GUI) {
     translate.open();
 
     const rotate = geometryFolder.addFolder('Rotate');
+    rotate.add(gOptions, 'autoRotate');
     rotate.add(gOptions, 'rotateX', -Math.PI, Math.PI, 0.05);
     rotate.add(gOptions, 'rotateY', -Math.PI, Math.PI, 0.05);
     rotate.add(gOptions, 'rotateZ', -Math.PI, Math.PI, 0.05);

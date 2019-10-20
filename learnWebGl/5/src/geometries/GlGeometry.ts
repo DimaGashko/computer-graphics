@@ -27,6 +27,8 @@ export default class GlGeometry {
         reflectX: false,
         reflectY: false,
         reflectZ: false,
+
+        autoRotate: true,
     }
 
     constructor(private gl: WebGLRenderingContext, public geometry: Geometry) { 
