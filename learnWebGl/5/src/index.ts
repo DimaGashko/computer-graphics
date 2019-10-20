@@ -69,6 +69,8 @@ const camera = {
 
     rotateY: 0,
     rotateZ: 0,
+
+    speed: 5,
 }
 
 options.baseGlColor = hexToGlColor(options.baseColor);
@@ -167,6 +169,11 @@ function drawFrame() {
 }
 
 function updateCamera() {
+    updateCameraAngle();
+    updateCameraCoords();
+}
+
+function updateCameraAngle() { 
     camera.rotateY += curMovementX / 500;
     camera.rotateX -= curMovementY / 500;
 
@@ -174,6 +181,14 @@ function updateCamera() {
 
     curMovementX = 0;
     curMovementY = 0;
+}
+
+function updateCameraCoords() { 
+    const { speed, rotateX, rotateY } = camera;
+
+    camera.translateZ -= speed * Math.cos(rotateY);
+    camera.translateY -= speed * Math.sin(rotateX);
+    camera.translateX += speed * Math.sin(rotateY);
 }
 
 function updateViewMatrix() {
