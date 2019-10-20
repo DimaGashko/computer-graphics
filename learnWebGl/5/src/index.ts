@@ -70,6 +70,9 @@ const camera = {
     rotateY: 0,
     rotateZ: 0,
 
+    minX: -Math.PI / 2.2,
+    maxX: Math.PI / 2.2,
+
     speed: 5,
     moveMode: 'keyboard',
 }
@@ -184,23 +187,25 @@ function updateCamera() {
     updateCameraAngle();
 
     if (camera.moveMode === 'auto') {
-        updateCameraCoordsAuto(); 
+        updateCameraCoordsAuto();
     } else {
         updateCameraCoordsByKeyboard();
     }
 }
 
-function updateCameraAngle() { 
+function updateCameraAngle() {
+    const { minX, maxX } = camera;
+
     camera.rotateY += curMovementX / 500;
     camera.rotateX -= curMovementY / 500;
 
-    camera.rotateX = Math.min(Math.max(camera.rotateX, -Math.PI / 3), Math.PI / 3);
+    camera.rotateX = Math.min(Math.max(camera.rotateX, minX), maxX);
 
     curMovementX = 0;
     curMovementY = 0;
 }
 
-function updateCameraCoordsAuto() { 
+function updateCameraCoordsAuto() {
     const { speed, rotateX, rotateY } = camera;
 
     camera.translateZ -= speed * Math.cos(rotateY);
@@ -405,7 +410,7 @@ function initGeometryGui(geometryFolder: dat.GUI) {
         }
 
         initGeometryGui(geometryFolder);
-    });    
+    });
 
     const translate = geometryFolder.addFolder('Translate');
     translate.add(gOptions, 'translateX', -worldRadius * 0.95, worldRadius);
