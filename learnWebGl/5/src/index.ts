@@ -18,7 +18,6 @@ import FGeometry from './geometries/FGeometry/FGeometry';
 import GlGeometry from './geometries/GlGeometry';
 import FpsCorrection from './scripts/FpsCorrection';
 import CubeGeometry from './geometries/CubeGeometry/CubeGeometry';
-import perlinNoise from './scripts/perlinNoise';
 
 const $: {
     canvas?: HTMLCanvasElement,
@@ -98,6 +97,8 @@ let ratio = 0;
 
 let curMovementX = 0;
 let curMovementY = 0;
+
+let time = 0;
 
 let viewMatrix: TMatrix;
 
@@ -245,7 +246,7 @@ function drawFrame() {
         gl.vertexAttribPointer(loc.aColor, 3, gl.UNSIGNED_BYTE, true, 0, 0);
 
         gl.uniformMatrix4fv(loc.tMatrix, false, geometry.tMatrix.matrix);
-        gl.uniform1f(loc.time, performance.now() / 1000);
+        gl.uniform1f(loc.time, time);
 
         let { r, g, b } = baseGlColor;
         gl.uniform4f(loc.baseColor, r, g, b, 1);
@@ -254,19 +255,12 @@ function drawFrame() {
     });
 }
 
-function update() { 
+function update() {
+    time++;
+
     fpsCorrection.update();
-    updatePerlin();
     updateCamera();
-    updateViewMatrix(); 
-}
-
-function updatePerlin() { 
-    const g = geometries[0];
-    const { options } = g;
-    const { translateX, translateY, translateZ } = options;
-
-    options.translateX = perlinNoise(translateX, translateY, translateZ);
+    updateViewMatrix();
 }
 
 function updateCamera() {
