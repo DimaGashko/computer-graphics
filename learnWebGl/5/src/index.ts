@@ -71,6 +71,7 @@ const camera = {
     rotateZ: 0,
 
     speed: 5,
+    moveMode: 'keyboard',
 }
 
 options.baseGlColor = hexToGlColor(options.baseColor);
@@ -184,6 +185,7 @@ function updateCameraAngle() {
 }
 
 function updateCameraCoords() { 
+    if (camera.moveMode !== 'auto') return;
     const { speed, rotateX, rotateY } = camera;
 
     camera.translateZ -= speed * Math.cos(rotateY);
@@ -327,13 +329,18 @@ function initGui() {
     baseOptions.add(options, 'rotateSpeed', -0.1, 0.1, 0.001);
     baseOptions.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01);
 
-    cameraFolder.add(camera, 'translateX', -worldRadius, worldRadius);
-    cameraFolder.add(camera, 'translateY', -worldRadius, worldRadius);
-    cameraFolder.add(camera, 'translateZ', -worldRadius, worldRadius);
+    cameraFolder.add(camera, 'speed', -25, 25);
+    cameraFolder.add(camera, 'moveMode', ['keyboard', 'auto']);
 
-    cameraFolder.add(camera, 'rotateX', -Math.PI, Math.PI, 0.05);
-    cameraFolder.add(camera, 'rotateY', -Math.PI, Math.PI, 0.05);
-    cameraFolder.add(camera, 'rotateZ', -Math.PI, Math.PI, 0.05);
+    const tCameraFolder = cameraFolder.addFolder('Manual Transformations');
+    tCameraFolder.add(camera, 'translateX', -worldRadius, worldRadius);
+    tCameraFolder.add(camera, 'translateY', -worldRadius, worldRadius);
+    tCameraFolder.add(camera, 'translateZ', -worldRadius, worldRadius);
+
+    tCameraFolder.add(camera, 'rotateX', -Math.PI, Math.PI, 0.05);
+    tCameraFolder.add(camera, 'rotateY', -Math.PI, Math.PI, 0.05);
+    tCameraFolder.add(camera, 'rotateZ', -Math.PI, Math.PI, 0.05);
+
 
     initGeometryGui(geometryFolder);
 }
@@ -347,7 +354,7 @@ function initGeometryGui(geometryFolder: dat.GUI) {
         }
 
         initGeometryGui(geometryFolder);
-    });
+    });    
 
     const translate = geometryFolder.addFolder('Translate');
     translate.add(gOptions, 'translateX', -worldRadius * 0.95, worldRadius);
