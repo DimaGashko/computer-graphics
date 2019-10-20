@@ -149,7 +149,11 @@ function drawFrame() {
 }
 
 function updateCamera() {
-    console.log(curMovementX, curMovementY);
+    camera.rotateY += curMovementX / 500;
+    camera.rotateX -= curMovementY / 500;
+
+    camera.rotateX = Math.min(Math.max(camera.rotateX, -Math.PI / 3), Math.PI / 3);
+
     curMovementX = 0;
     curMovementY = 0;
 }
@@ -160,8 +164,8 @@ function updateViewMatrix() {
 
     viewMatrix = new TMatrix()
         .translate(translateX, translateY, translateZ)
-        .rotateX(rotateX)
         .rotateY(rotateY)
+        .rotateX(rotateX)
         .rotateZ(rotateZ)
         .inverse();
 
@@ -184,8 +188,8 @@ function updateTMatrix(geometry: GlGeometry) {
 
     tMatrix.reset(viewMatrix.matrix)
         .translate(translateX, translateY, translateZ)
-        .rotateX(rotateX)
         .rotateY(rotateY)
+        .rotateX(rotateX)
         .rotateZ(rotateZ)
         .scale(scaleX, scaleY, scaleZ)
         .reflect(reflectX, reflectY, reflectZ)
