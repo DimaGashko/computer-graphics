@@ -5,6 +5,7 @@ import vShaderSource from './shaders/v.glsl';
 import fShaderSource from './shaders/f.glsl';
 
 import { throttle } from 'throttle-debounce';
+import * from 'fullscreen-api-polyfill';
 import * as dat from 'dat.gui';
 
 import { createShader, createProgram } from './scripts/webGlUtils';
@@ -55,6 +56,8 @@ const options = {
 
     activeGeometry: 'Geometry 1',
     baseGlColor: null,
+
+    toggleFullscreen: () => toggleFullscreen(),
 }
 
 const camera = {
@@ -63,6 +66,7 @@ const camera = {
     translateZ: 1500,
 
     rotateX: 0,
+
     rotateY: 0,
     rotateZ: 0,
 }
@@ -199,6 +203,17 @@ function resize() {
     updateCanvasSize();
 }
 
+function toggleFullscreen() {
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+        return;
+    }
+
+    try {
+        document.body.requestFullscreen();
+    } catch { };
+}
+
 function updateCanvasSize() {
     $.canvas.width = canvasW;
     $.canvas.height = canvasH;
@@ -234,6 +249,8 @@ function initGui() {
     baseOptions.addColor(options, 'baseColor').onChange(() => {
         options.baseGlColor = hexToGlColor(options.baseColor);
     });
+
+    baseOptions.add(options, 'toggleFullscreen');
 
     baseOptions.add(options, 'rotateSpeed', -0.1, 0.1, 0.001);
     baseOptions.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01);
