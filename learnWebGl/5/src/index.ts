@@ -100,25 +100,46 @@ let curMovementY = 0;
 let viewMatrix: TMatrix;
 
 const geometries = new Array(512).fill(0)
-    .map(() => new FGeometry())
-    .map((geometry: Geometry) => {
-        return new GlGeometry(gl, geometry);
+    .map((_, i, { length }) => {
+        const geometry = new FGeometry();
+        const glGeometry = new GlGeometry(gl, geometry);
+        const options = glGeometry.options;
+
+        const side = Math.cbrt(length) ^ 0;
+
+        const x = i % side;
+        const y = (i / (side ** 2)) ^ 0;
+        const z = ((i / side) ^ 0) % side;
+        const size = 300;
+
+        const offset = -(size * side) / 2;
+
+        options.translateX = offset + x * size;
+        options.translateY = -350 - y * size;
+        options.translateZ = -offset - z * size;
+
+        return glGeometry;
     });
 
-geometries.map(({ options }, i, { length }) => {
-    const side = Math.cbrt(length) ^ 0;
+geometries.push(...new Array(125).fill(0)
+    .map((_, i, { length }) => {
+        const geometry = new CubeGeometry();
+        const glGeometry = new GlGeometry(gl, geometry);
+        const options = glGeometry.options;
 
-    const x = i % side;
-    const y = (i / (side ** 2)) ^ 0;
-    const z = ((i / side) ^ 0) % side;
-    const size = 300;
+        const side = Math.cbrt(length) ^ 0;
 
-    const offset = -(size * side) / 2;
+        const x = i % side;
+        const y = (i / (side ** 2)) ^ 0;
+        const z = ((i / side) ^ 0) % side;
+        const size = 150;
 
-    options.translateX = offset + x * size;
-    options.translateY = -350 - y * size;
-    options.translateZ = -offset - z * size;
-});
+        options.translateX = 3500 + x * size;
+        options.translateY = -350 - y * size;
+        options.translateZ = -3500 - z * size;
+
+        return glGeometry;
+    }));
 
 geometries.push(...[
     [worldRadius, -500, worldRadius],
