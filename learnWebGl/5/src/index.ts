@@ -15,10 +15,10 @@ import matMulMat4 from './scripts/math/matMulMat4';
 import TMatrix from './scripts/TMatrix';
 
 import FGeometry from './geometries/FGeometry/FGeometry';
-import Geometry from './geometries/Geometry';
 import GlGeometry from './geometries/GlGeometry';
 import FpsCorrection from './scripts/FpsCorrection';
 import CubeGeometry from './geometries/CubeGeometry/CubeGeometry';
+import perlinNoise from './scripts/perlinNoise';
 
 const $: {
     canvas?: HTMLCanvasElement,
@@ -57,6 +57,8 @@ const options = {
 
     activeGeometry: 'Geometry 1',
     baseGlColor: null,
+
+    DEPTH_TEST: true,
 
     toggleFullscreen: () => toggleFullscreen(),
 }
@@ -99,7 +101,45 @@ let curMovementY = 0;
 
 let viewMatrix: TMatrix;
 
-const geometries = new Array(512).fill(0)
+const geometries: GlGeometry[] = [];
+
+geometries.push(...[
+    [worldRadius, -500, worldRadius],
+    [worldRadius, -500, -worldRadius],
+    [-worldRadius, -500, worldRadius],
+    [-worldRadius, -500, -worldRadius],
+]
+    .map(coords => coords.map(c => c * 0.8))
+    .map(([x, y, z]) => {
+        const glGeometry = new GlGeometry(gl, new FGeometry());
+
+        glGeometry.options.translateX = x;
+        glGeometry.options.translateY = y;
+        glGeometry.options.translateZ = z;
+
+        return glGeometry;
+    })
+);
+
+geometries.push(...[
+    [worldRadius, -500, worldRadius],
+    [worldRadius, -500, -worldRadius],
+    [-worldRadius, -500, worldRadius],
+    [-worldRadius, -500, -worldRadius],
+]
+    .map(coords => coords.map(c => c * 0.8))
+    .map(([x, y, z]) => {
+        const glGeometry = new GlGeometry(gl, new FGeometry());
+
+        glGeometry.options.translateX = x;
+        glGeometry.options.translateY = y;
+        glGeometry.options.translateZ = z;
+
+        return glGeometry;
+    })
+);
+
+geometries.push(...new Array(512).fill(0)
     .map((_, i, { length }) => {
         const geometry = new FGeometry();
         const glGeometry = new GlGeometry(gl, geometry);
@@ -119,7 +159,7 @@ const geometries = new Array(512).fill(0)
         options.translateZ = -offset - z * size;
 
         return glGeometry;
-    });
+    }));
 
 geometries.push(...new Array(125).fill(0)
     .map((_, i, { length }) => {
@@ -140,24 +180,6 @@ geometries.push(...new Array(125).fill(0)
 
         return glGeometry;
     }));
-
-geometries.push(...[
-    [worldRadius, -500, worldRadius],
-    [worldRadius, -500, -worldRadius],
-    [-worldRadius, -500, worldRadius],
-    [-worldRadius, -500, -worldRadius],
-]
-    .map(coords => coords.map(c => c * 0.8))
-    .map(([x, y, z]) => {
-        const glGeometry = new GlGeometry(gl, new FGeometry());
-
-        glGeometry.options.translateX = x;
-        glGeometry.options.translateY = y;
-        glGeometry.options.translateZ = z;
-
-        return glGeometry;
-    })
-);
 
 (function () {
     const ground = new CubeGeometry();
@@ -188,22 +210,28 @@ initGui();
 start();
 
 function drawFrame() {
+    const { DEPTH_TEST, rotateSpeed, baseGlColor } = options;
+
     gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.enable(gl.DEPTH_TEST);
+
+    if (DEPTH_TEST) {
+        gl.clear(gl.COLOR_BUFFER_BIT || gl.DEPTH_BUFFER_BIT);
+        gl.enable(gl.DEPTH_TEST);
+    } else {
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.disable(gl.DEPTH_TEST);
+    }
 
     gl.useProgram(program);
 
-    fpsCorrection.update();
 
-    updateCamera();
-    updateViewMatrix();
+    update();
 
-    geometries.forEach((glGeometry) => {
+    ((DEPTH_TEST) ? geometries : geometries.slice().reverse()).forEach((glGeometry) => {
         const { verticesBuffer, colorsBuffer, geometry, options: gOptions } = glGeometry;
 
         if (gOptions.autoRotate) {
-            gOptions.rotateY += options.rotateSpeed * fpsCorrection.val;
+            gOptions.rotateY += rotateSpeed * fpsCorrection.val;
         }
 
         updateTMatrix(glGeometry);
@@ -219,11 +247,26 @@ function drawFrame() {
         gl.uniformMatrix4fv(loc.tMatrix, false, geometry.tMatrix.matrix);
         gl.uniform1f(loc.time, performance.now() / 1000);
 
-        let { r, g, b } = options.baseGlColor;
+        let { r, g, b } = baseGlColor;
         gl.uniform4f(loc.baseColor, r, g, b, 1);
 
         gl.drawArrays(gl.TRIANGLES, 0, geometry.primitiveCount);
     });
+}
+
+function update() { 
+    fpsCorrection.update();
+    updatePerlin();
+    updateCamera();
+    updateViewMatrix(); 
+}
+
+function updatePerlin() { 
+    const g = geometries[0];
+    const { options } = g;
+    const { translateX, translateY, translateZ } = options;
+
+    options.translateX = perlinNoise(translateX, translateY, translateZ);
 }
 
 function updateCamera() {
@@ -364,11 +407,11 @@ function initEvents() {
         }
     });
 
-    document.addEventListener('keydown', ({ keyCode }) => {
+    $.canvas.addEventListener('keydown', ({ keyCode }) => {
         return pressedKeys[keyCode] = true
     });
 
-    document.addEventListener('keyup', ({ keyCode }) => {
+    $.canvas.addEventListener('keyup', ({ keyCode }) => {
         return pressedKeys[keyCode] = false;
     });
 }
@@ -464,8 +507,11 @@ function initGui() {
     tCameraFolder.add(camera, 'rotateY', -Math.PI, Math.PI, 0.05);
     tCameraFolder.add(camera, 'rotateZ', -Math.PI, Math.PI, 0.05);
 
+    const other = gui.addFolder('Other');
+    other.add(options, 'DEPTH_TEST');
 
     initGeometryGui(geometryFolder);
+
 }
 
 function initGeometryGui(geometryFolder: dat.GUI) {
