@@ -196,6 +196,18 @@ function initEvents() {
     window.addEventListener('load', () => {
         resize();
     });
+
+    $.canvas.addEventListener('focus', () => {
+        lockPointer();
+    });
+
+    $.canvas.addEventListener('click', () => {
+        lockPointer();
+    });
+
+    $.canvas.addEventListener('blur', () => {
+        unlockPointer();
+    });
 }
 
 function resize() {
@@ -212,6 +224,16 @@ function toggleFullscreen() {
     try {
         document.body.requestFullscreen();
     } catch { };
+}
+
+function lockPointer() {
+    if (document.pointerLockElement === $.canvas) return;
+    $.canvas.requestPointerLock();
+}
+
+function unlockPointer() {
+    if (document.pointerLockElement !== $.canvas) return;
+    document.exitPointerLock();
 }
 
 function updateCanvasSize() {
@@ -243,6 +265,7 @@ function initGui() {
     const cameraFolder = gui.addFolder('Camera');
     const geometryFolder = gui.addFolder(`Geometry`);
 
+    baseOptions.open();
     cameraFolder.open();
     geometryFolder.open();
 
@@ -251,7 +274,7 @@ function initGui() {
     });
 
     baseOptions.add(options, 'toggleFullscreen');
-
+    
     baseOptions.add(options, 'rotateSpeed', -0.1, 0.1, 0.001);
     baseOptions.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01);
 
