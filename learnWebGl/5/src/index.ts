@@ -409,13 +409,17 @@ function initGeometryGui(geometryFolder: dat.GUI) {
             geometryFolder.removeFolder(geometryFolder.__folders[key]);
         }
 
+        for (let key in geometryFolder.__controllers) {
+            geometryFolder.__controllers[key].remove();
+        }
+
         initGeometryGui(geometryFolder);
     });
 
     const translate = geometryFolder.addFolder('Translate');
-    translate.add(gOptions, 'translateX', -worldRadius * 0.95, worldRadius);
-    translate.add(gOptions, 'translateY', -worldRadius * 0.95, worldRadius);
-    translate.add(gOptions, 'translateZ', -worldRadius * 0.95, worldRadius);
+    translate.add(gOptions, 'translateX', -worldRadius * 0.8, worldRadius * 0.8);
+    translate.add(gOptions, 'translateY', -worldRadius * 0.8, worldRadius * 0.8);
+    translate.add(gOptions, 'translateZ', -worldRadius * 0.8, worldRadius * 0.8);
     translate.open();
 
     const rotate = geometryFolder.addFolder('Rotate');
