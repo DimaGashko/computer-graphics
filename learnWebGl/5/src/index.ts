@@ -73,7 +73,7 @@ const camera = {
     minX: -Math.PI / 2.2,
     maxX: Math.PI / 2.2,
 
-    speed: 5,
+    speed: 10,
     moveMode: 'keyboard',
 }
 
@@ -229,20 +229,22 @@ function updateCameraAngle() {
 
 function updateCameraCoordsAuto() {
     const { speed, rotateX, rotateY } = camera;
+    const d = speed * fpsCorrection.val;
 
-    camera.translateZ -= speed * Math.cos(rotateY);
-    camera.translateY -= speed * Math.sin(rotateX);
-    camera.translateX += speed * Math.sin(rotateY);
+    camera.translateZ -= d * Math.cos(rotateY);
+    camera.translateY -= d * Math.sin(rotateX);
+    camera.translateX += d * Math.sin(rotateY);
 }
 
 function updateCameraCoordsByKeyboard() {
     const { speed } = camera;
     const normalAngle = Math.PI / 2;
+    const d = speed * fpsCorrection.val;
 
     let rotateX = 0;
     if (pressedKeys[KEYS.up]) rotateX += normalAngle;
     if (pressedKeys[KEYS.down]) rotateX -= normalAngle;
-    camera.translateY -= speed * Math.sin(rotateX);
+    camera.translateY -= d * Math.sin(rotateX);
 
     let y = 0;
     let z = 0;
@@ -256,8 +258,8 @@ function updateCameraCoordsByKeyboard() {
     if (y === 0 && z === 0) return;
     const rotateY = Math.atan2(y, z);
 
-    const dx = speed * Math.sin(rotateY);
-    const dz = speed * Math.cos(rotateY);
+    const dx = d * Math.sin(rotateY);
+    const dz = d * Math.cos(rotateY);
 
     camera.translateX += dx * Math.cos(-camera.rotateY) - dz * Math.sin(-camera.rotateY);
     camera.translateZ -= dx * Math.sin(-camera.rotateY) + dz * Math.cos(-camera.rotateY);
@@ -317,8 +319,9 @@ function initEvents() {
         resize();
     });
 
-    $.canvas.addEventListener('click', () => {
+    $.canvas.addEventListener('mousedown', () => {
         lockPointer();
+        startFullscreen();
     });
 
     $.canvas.addEventListener('mousemove', ({ movementX, movementY }) => {
@@ -350,8 +353,24 @@ function resize() {
 }
 
 function toggleFullscreen() {
-    if (document.fullscreenElement) {
-        document.exitFullscreen();
+    if (document.fullscreenElement !== $.root) {
+        startFullscreen();
+        return;
+    }
+
+    exitFullscreen()
+}
+
+function exitFullscreen() {
+    if (document.fullscreenElement !== $.root) {
+        return;
+    }
+
+    document.exitFullscreen();
+}
+
+function startFullscreen() { 
+    if (document.fullscreenElement === $.root) {
         return;
     }
 
@@ -379,7 +398,7 @@ function updateMetrics() {
     canvasW = Math.floor(screenW * window.devicePixelRatio);
     canvasH = Math.floor(screenH * window.devicePixelRatio);
 
-    ratio = canvasH / canvasH;
+    ratio = canvasW / canvasH;
 }
 
 function getActiveGeometryOptions() {
