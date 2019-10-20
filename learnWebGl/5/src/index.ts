@@ -52,7 +52,7 @@ const options = {
     rotateSpeed: 0.01,
 
     fieldOfView: Math.PI / 3,
-    far: worldRadius * 2,
+    far: worldRadius * 2 * 3,
     near: 1,
 
     activeGeometry: 'Geometry 1',
@@ -63,13 +63,12 @@ const options = {
 
 const camera = {
     translateX: 0,
-    translateY: 0,
-    translateZ: 1500,
+    translateY: -300,
+    translateZ: 3500,
 
-    rotateX: 0,
-
+    rotateX: Math.PI / 9,
     rotateY: 0,
-    rotateZ: 0,
+    rotateZ:0,
 
     minX: -Math.PI / 2.2,
     maxX: Math.PI / 2.2,
@@ -112,21 +111,20 @@ geometries.map(({ options }, i, { length }) => {
     const x = i % side;
     const y = (i / (side ** 2)) ^ 0;
     const z = ((i / side) ^ 0) % side;
-    const size = 180;
-    const k = 1.1;
+    const size = 300;
 
-    const offset = - (size * side) / 2;
+    const offset = -(size * side) / 2;
 
-    options.translateX = offset + x * size * k;
-    options.translateY = offset + y * size * k;
-    options.translateZ = -offset - z * size * k * 1.5;
+    options.translateX = offset + x * size;
+    options.translateY = -350 - y * size;
+    options.translateZ = -offset - z * size;
 });
 
 geometries.push(...[
-    [worldRadius, 0, worldRadius],
-    [worldRadius, 0, -worldRadius],
-    [-worldRadius, 0, worldRadius],
-    [-worldRadius, 0, -worldRadius],
+    [worldRadius, -500, worldRadius],
+    [worldRadius, -500, -worldRadius],
+    [-worldRadius, -500, worldRadius],
+    [-worldRadius, -500, -worldRadius],
 ]
     .map(coords => coords.map(c => c * 0.8))
     .map(([x, y, z]) => {
@@ -145,13 +143,18 @@ geometries.push(...[
     const glGeometry = new GlGeometry(gl, ground);
     const { options } = glGeometry;
 
-    options.translateX = 0;
-    options.translateY = worldRadius;
-    options.translateZ = 0  ;
+    const side = worldRadius * 2 * 5;
+    const size = 50;
+    
+    options.translateX = -side;
+    options.translateY = 0;
+    options.translateZ = -side;
 
-    options.scaleX = worldRadius;
-    options.scaleY = worldRadius;
-    options.scaleZ = worldRadius;
+    options.scaleY = 0.25;
+    options.scaleX = side / size;
+    options.scaleZ = side / size;
+
+    options.autoRotate = false;
 
     geometries.push(glGeometry);
 }());
@@ -181,7 +184,7 @@ function drawFrame() {
         if (gOptions.autoRotate) {
             gOptions.rotateY += options.rotateSpeed * fpsCorrection.val;
         }
-        
+
         updateTMatrix(glGeometry);
 
         gl.enableVertexAttribArray(loc.aPosition);
