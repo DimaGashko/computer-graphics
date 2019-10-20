@@ -68,7 +68,7 @@ const camera = {
 
     rotateX: Math.PI / 9,
     rotateY: 0,
-    rotateZ:0,
+    rotateZ: 0,
 
     minX: -Math.PI / 2.2,
     maxX: Math.PI / 2.2,
@@ -138,14 +138,14 @@ geometries.push(...[
     })
 );
 
-(function () { 
+(function () {
     const ground = new CubeGeometry();
     const glGeometry = new GlGeometry(gl, ground);
     const { options } = glGeometry;
 
     const side = worldRadius * 2 * 5;
     const size = 50;
-    
+
     options.translateX = -side;
     options.translateY = 0;
     options.translateZ = -side;
@@ -282,8 +282,10 @@ function updateViewMatrix() {
     ));
 }
 
-function updateTMatrix(geometry: GlGeometry) {
-    const tMatrix = geometry.geometry.tMatrix;
+function updateTMatrix(glGeometry: GlGeometry) {
+    const { geometry, options } = glGeometry;
+
+    const tMatrix = geometry.tMatrix;
 
     const {
         reflectX, reflectY, reflectZ,
@@ -291,15 +293,19 @@ function updateTMatrix(geometry: GlGeometry) {
         scaleX, scaleY, scaleZ,
         shearXY, shearXZ, shearYX, shearYZ, shearZX, shearZY,
         translateX, translateY, translateZ,
-    } = geometry.options;
+    } = options;
+
+    const { centerX, centerY, centerZ } = geometry;
 
     tMatrix.reset(viewMatrix.matrix)
         .translate(translateX, translateY, translateZ)
+        .translate(centerX * scaleX, centerY * scaleY, centerZ * scaleZ)
         .rotateY(rotateY)
         .rotateX(rotateX)
         .rotateZ(rotateZ)
-        .scale(scaleX, scaleY, scaleZ)
         .reflect(reflectX, reflectY, reflectZ)
+        .scale(scaleX, scaleY, scaleZ)
+        .translate(-centerX, -centerY, -centerZ)
         .shear(shearXY, shearYX, shearXZ, shearZX, shearYZ, shearZY)
 }
 
@@ -368,7 +374,7 @@ function exitFullscreen() {
     document.exitFullscreen();
 }
 
-function startFullscreen() { 
+function startFullscreen() {
     if (document.fullscreenElement === $.root) {
         return;
     }
@@ -470,9 +476,9 @@ function initGeometryGui(geometryFolder: dat.GUI) {
     rotate.open();
 
     const scale = geometryFolder.addFolder('Scale');
-    scale.add(gOptions, 'scaleX', 0, 6, 0.1);
-    scale.add(gOptions, 'scaleY', 0, 6, 0.1);
-    scale.add(gOptions, 'scaleZ', 0, 6, 0.1);
+    scale.add(gOptions, 'scaleX', 0.1, 6, 0.1);
+    scale.add(gOptions, 'scaleY', 0.1, 6, 0.1);
+    scale.add(gOptions, 'scaleZ', 0.1, 6, 0.1);
     scale.open();
 
     const shear = geometryFolder.addFolder('Shear');

@@ -37,9 +37,13 @@ export default abstract class Geometry {
 
         for (let i = 0; i < vs.length; i += 3) {
             if (vs[i] > x) x = vs[i];
-            if (vs[i + 1] > x) x = vs[i + 1];
-            if (vs[i + 2] > x) x = vs[i + 2];
+            if (vs[i + 1] > y) y = vs[i + 1];
+            if (vs[i + 2] > z) z = vs[i + 2];
         };
+
+        x /= 2;
+        y /= 2;
+        z /= 2;
 
         this.center = { x, y, z };
     }
