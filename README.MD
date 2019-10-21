@@ -17,7 +17,8 @@ YouTube: https://youtu.be/w21uZKaBTic
 - Fullscreen API
 
 ## Other
-- Some Screenshots: [learnWebGl/screenshots](../learnWebGl/screenshots)
+
+- Some Screenshots: [learnWebGl/screenshots](./learnWebGl/screenshots)
 - Some Videos: [learnWebGl/videos](./learnWebGl/videos)
 - Subdemos
   - [js-coder.tk/computer-graphics/gl/4](https://js-coder.tk/computer-graphics/gl/4)
