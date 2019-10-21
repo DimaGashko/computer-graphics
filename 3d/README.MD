@@ -58,10 +58,10 @@ There's some of Screenshots and videos I made while I'm was learning the WebGL.
 
 - Screenshots: [learnWebGl/screenshots](../learnWebGl/screenshots)
 - Videos: [learnWebGl/screenshots](../learnWebGl/videos)
-- Subdemos:
-  - https://js-coder.tk/computer-graphics/gl/4
-  - https://js-coder.tk/computer-graphics/gl/3
-  - https://js-coder.tk/computer-graphics/gl/2
-  - https://js-coder.tk/computer-graphics/gl/1
-  - https://js-coder.tk/computer-graphics/gl/0
-  - https://js-coder.tk/computer-graphics/gl/5
+- Subdemos
+  - [js-coder.tk/computer-graphics/gl/4](https://js-coder.tk/computer-graphics/gl/4)
+  - [js-coder.tk/computer-graphics/gl/3](https://js-coder.tk/computer-graphics/gl/3)
+  - [js-coder.tk/computer-graphics/gl/2](https://js-coder.tk/computer-graphics/gl/2)
+  - [js-coder.tk/computer-graphics/gl/1](https://js-coder.tk/computer-graphics/gl/1)
+  - [js-coder.tk/computer-graphics/gl/0](https://js-coder.tk/computer-graphics/gl/0)
+  - [js-coder.tk/computer-graphics/gl/5](https://js-coder.tk/computer-graphics/gl/5)
