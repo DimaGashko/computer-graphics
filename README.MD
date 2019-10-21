@@ -48,4 +48,3 @@ YouTube: https://youtu.be/w21uZKaBTic
 - Links: https://js-coder.tk/computer-graphics/chart/
 
 ![The Chart Example](./chart/src/assets/chart.png)
-
