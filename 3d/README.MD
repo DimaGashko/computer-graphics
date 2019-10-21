@@ -1,6 +1,6 @@
 # 3D Graphics
 
-Check it out: http://js-coder.tk/computer-graphics/3d/
+Check it out: https://js-coder.tk/computer-graphics/3d/
 
 YouTube: https://youtu.be/w21uZKaBTic
 
@@ -50,7 +50,7 @@ npm run build
 
 p.s. use yarn if you want to contribute to this repo
 
-## Screenshots and demos
+## Screenshots, video and subdemos
 
 In fact, this demo is result of my learning of the WebGL. Of 'sub demos' you can find in [learnWebGl folder](../learnWebGl).
 
@@ -58,3 +58,10 @@ There's some of Screenshots and videos I made while I'm was learning the WebGL.
 
 - Screenshots: [learnWebGl/screenshots](../learnWebGl/screenshots)
 - Videos: [learnWebGl/screenshots](../learnWebGl/videos)
+- Subdemos:
+  - https://js-coder.tk/computer-graphics/gl/4
+  - https://js-coder.tk/computer-graphics/gl/3
+  - https://js-coder.tk/computer-graphics/gl/2
+  - https://js-coder.tk/computer-graphics/gl/1
+  - https://js-coder.tk/computer-graphics/gl/0
+  - https://js-coder.tk/computer-graphics/gl/5

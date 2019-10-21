@@ -1,6 +1,6 @@
 # Affine transformations
 
-Check it out: http://js-coder.tk/computer-graphics/affine/
+Check it out: https://js-coder.tk/computer-graphics/affine/
 
 YouTube: https://youtu.be/w21uZKaBTic
 
