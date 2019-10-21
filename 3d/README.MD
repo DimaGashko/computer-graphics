@@ -16,7 +16,7 @@ There's list of keys to use in the demo:
 - Shift - down
 
 p.s. on mobile there's only two way to move the camera - 'auto mode' or
-'manual transformations; in 'Camera' folder of controls
+'manual transformations in 'camera' folder of controls
 
 Some 'F's and cubes live on the scene. You can manipulate them by controls panel on the right.
 You need select the Geometry first (see videos for example).
