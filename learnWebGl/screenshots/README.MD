@@ -1,4 +1,4 @@
-# Learn the WebGL videos
+# Learn the WebGL Screenshots
 
 ![Screenshot](./26.png)
 ![Screenshot](./25.png)
