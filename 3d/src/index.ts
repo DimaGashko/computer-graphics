@@ -481,12 +481,11 @@ function initGui() {
     });
 
     baseOptions.add(options, 'toggleFullscreen');
-
     baseOptions.add(options, 'rotateSpeed', -0.1, 0.1, 0.001);
-    baseOptions.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01);
 
     cameraFolder.add(camera, 'speed', -25, 25);
     cameraFolder.add(camera, 'moveMode', ['keyboard', 'auto']);
+    cameraFolder.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01);
 
     const tCameraFolder = cameraFolder.addFolder('Manual Transformations');
     tCameraFolder.add(camera, 'translateX', -worldRadius, worldRadius);
