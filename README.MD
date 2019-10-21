@@ -18,7 +18,7 @@ YouTube: https://youtu.be/w21uZKaBTic
 
 ## Other
 - Some Screenshots: [learnWebGl/screenshots](../learnWebGl/screenshots)
-- Some Videos: [learnWebGl/screenshots](../learnWebGl/videos)
+- Some Videos: [learnWebGl/videos](../learnWebGl/videos)
 - Subdemos
   - [js-coder.tk/computer-graphics/gl/4](https://js-coder.tk/computer-graphics/gl/4)
   - [js-coder.tk/computer-graphics/gl/3](https://js-coder.tk/computer-graphics/gl/3)

@@ -57,7 +57,7 @@ In fact, this demo is result of my learning of the WebGL. Of 'sub demos' you can
 There's some of Screenshots and videos I made while I'm was learning the WebGL.
 
 - Screenshots: [learnWebGl/screenshots](../learnWebGl/screenshots)
-- Videos: [learnWebGl/screenshots](../learnWebGl/videos)
+- Videos: [learnWebGl/videos](../learnWebGl/videos)
 - Subdemos
   - [js-coder.tk/computer-graphics/gl/4](https://js-coder.tk/computer-graphics/gl/4)
   - [js-coder.tk/computer-graphics/gl/3](https://js-coder.tk/computer-graphics/gl/3)
