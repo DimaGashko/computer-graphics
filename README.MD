@@ -2,6 +2,8 @@
 
 ## 3D Graphics
 
+Source: [3d](./3d)
+
 Check it out: https://js-coder.tk/computer-graphics/3d/
 
 YouTube: https://youtu.be/w21uZKaBTic
