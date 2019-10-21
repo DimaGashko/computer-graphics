@@ -416,19 +416,15 @@ function resize() {
 }
 
 function toggleFullscreen() {
-    if (document.fullscreenElement !== $.root) {
+    if (!document.fullscreenElement) {
         startFullscreen();
         return;
     }
 
-    exitFullscreen()
+    exitFullscreen();
 }
 
 function exitFullscreen() {
-    if (document.fullscreenElement !== $.root) {
-        return;
-    }
-
     document.exitFullscreen();
 }
 
