@@ -52,7 +52,7 @@ p.s. use yarn if you want to contribute to this repo
 
 ## Screenshots, video and subdemos
 
-In fact, this demo is result of my learning of the WebGL. Of 'sub demos' you can find in [learnWebGl folder](../learnWebGl).
+In fact, this demo is result of my learning of the WebGL. Some 'sub demos' you can find in [learnWebGl folder](../learnWebGl).
 
 There's some of Screenshots and videos I made while I'm was learning the WebGL.
 
