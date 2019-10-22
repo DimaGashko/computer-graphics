@@ -6,7 +6,7 @@ Source: [3d graphics](./3d)
 
 Check it out: https://js-coder.tk/computer-graphics/3d/
 
-YouTube: https://youtu.be/w21uZKaBTic
+YouTube: https://youtu.be/_dCs00u7qLI
 
 ![The Example](./3d/src/assets/3d.png)
 
