@@ -54,12 +54,12 @@ export default class App {
         this.$.canvas.addEventListener('mousewheel', (e: MouseWheelEvent) => {
             const zoom = this._zoom.copy();
 
-            zoom.y += e.deltaY / 50;
+            zoom.y -= e.deltaY / 50;
 
             if (e.shiftKey) {
-                zoom.x += e.deltaX / 50;
+                zoom.x -= e.deltaX / 50;
             } else {
-                zoom.x += e.deltaY / 50;
+                zoom.x -= e.deltaY / 50;
             }
 
             this.setZoom(zoom);
@@ -75,8 +75,8 @@ export default class App {
     }
 
     public setZoom(zoom) {
-        zoom.x = Math.min(Math.max(zoom.x, 1e-10), 1e10);
-        zoom.y = Math.min(Math.max(zoom.y, 1e-10), 1e10);
+        zoom.x = Math.min(Math.max(zoom.x, 0.01), 1e10);
+        zoom.y = Math.min(Math.max(zoom.y, 0.01), 1e10);
 
         this._zoom = zoom;
     }
@@ -171,7 +171,7 @@ export default class App {
 
     private drawAllGrids() {
         const ctx = this.ctx;
-        const z = this._zoom.x + this._zoom.y / 2;
+        const z = Math.min(this._zoom.x, this._zoom.y);
 
         ctx.save();
         ctx.strokeStyle = 'rgba(255,255,255,.2)';
@@ -191,18 +191,19 @@ export default class App {
             this.drawGrid(new Vector(50, 50));
         } else if (z >= 0.08) {
             ctx.lineWidth = 1;
-            this.drawGrid(new Vector(250, 250));
+            this.drawGrid(new Vector(500, 500));
         }
 
         ctx.lineWidth = (z >= 0.4) ? 3 : 1;
-        this.drawGrid(new Vector(1000, 1000));
+        this.drawGrid(new Vector(10000, 10000));
 
         ctx.restore();
     }
 
     private drawGrid(interval: Vector) {
         const ctx = this.ctx;
-        const z = this._zoom;
+        const z = this._zoom.copy();
+
         const step = interval.copy().mul(z);
         const numberOfSteps = this._size.copy().div(step);
         const g0 = this.toWorld(new Vector(-1, -1));
