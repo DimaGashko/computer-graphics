@@ -4,25 +4,25 @@ export default class Vector {
 
    }
 
-   copy() { 
+   copy() {
       return new Vector(this.x, this.y);
    }
 
-   add(v: Vector) { 
+   add(v: Vector) {
       this.x += v.x;
       this.y += v.y;
 
       return this;
    }
 
-   sub(v: Vector) { 
+   sub(v: Vector) {
       this.x -= v.x;
       this.y -= v.y;
 
       return this;
    }
 
-   mul(v: Vector) { 
+   mul(v: Vector) {
       this.x *= v.x;
       this.y *= v.y;
 
@@ -32,6 +32,13 @@ export default class Vector {
    div(v: Vector) {
       this.x /= v.x;
       this.y /= v.y;
+
+      return this;
+   }
+
+   mod(v: Vector) {
+      this.x %= v.x;
+      this.y %= v.y;
 
       return this;
    }

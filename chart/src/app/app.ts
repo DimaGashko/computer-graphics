@@ -20,7 +20,7 @@ export default class App {
 
     private _size = new Vector(0, 0);
     private _coords = new Vector(0, 0);
-    private _zoom = new Vector(10, 10);
+    private _zoom = new Vector(55, 55);
 
     private _pointsInterval = 1;
 
@@ -98,6 +98,7 @@ export default class App {
     }
 
     private tik() {
+        this.drawAllGrids();
         this.renderFunc();
     }
 
@@ -111,7 +112,7 @@ export default class App {
         ctx.beginPath();
 
         this.getPoints().forEach((point, i, points) => {
-            if (i != 0) { 
+            if (i != 0) {
                 const prev = points[i - 1];
 
                 if (Math.abs(point.y - prev.y) > this._pointsInterval * 5) {
@@ -168,6 +169,65 @@ export default class App {
     private xToView(x: number) { return this.toView(new Vector(x, 0)).x; }
     private yToView(y: number) { return this.toView(new Vector(0, y)).y; }
 
+    private drawAllGrids() {
+        const ctx = this.ctx;
+        const z = this._zoom.x + this._zoom.y / 2;
+
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,.2)';
+
+        if (z >= 9) {
+            ctx.lineWidth = 1;
+            this.drawGrid(new Vector(1, 1));
+        }
+
+        if (z >= 3) {
+            ctx.lineWidth = 1;
+            this.drawGrid(new Vector(10, 10));
+        }
+
+        if (z >= 0.4) {
+            ctx.lineWidth = 2;
+            this.drawGrid(new Vector(50, 50));
+        } else if (z >= 0.08) {
+            ctx.lineWidth = 1;
+            this.drawGrid(new Vector(250, 250));
+        }
+
+        ctx.lineWidth = (z >= 0.4) ? 3 : 1;
+        this.drawGrid(new Vector(1000, 1000));
+
+        ctx.restore();
+    }
+
+    private drawGrid(interval: Vector) {
+        const ctx = this.ctx;
+        const z = this._zoom;
+        const step = interval.copy().mul(z);
+        const numberOfSteps = this._size.copy().div(step);
+        const g0 = this.toWorld(new Vector(-1, -1));
+        const worldStart = g0.copy().sub(g0.mod(interval));
+        const start = this.toView(worldStart);
+
+        for (let i = 0; i < numberOfSteps.x; i++) {
+            const x = Math.round(start.x + step.x * i);
+
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, this._size.y);
+            ctx.stroke();
+        }
+
+        for (let i = 0; i < numberOfSteps.y; i++) {
+            const y = Math.round(start.y + step.y * i);
+
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(this._size.x, y);
+            ctx.stroke();
+        }
+    }
+
     private resize() {
         this.updateMetrics();
         this.updateCanvasSize();
@@ -196,7 +256,7 @@ export default class App {
         this.func = func;
     }
 
-    set coords(coords: Vector) { 
+    set coords(coords: Vector) {
         this._coords = coords.copy();
     }
 }
