@@ -28,7 +28,7 @@ All transformations are provided by affine transformations (it's the demo heart)
 ## Features
 
 - Fullscreen supports
-- Pointer lock (line in games)
+- Pointer lock (like in games)
 - Full controll of the scene. There's really a lot of controls. You can change color, geometries rotating speed, camera speed, camera moving mode, change field of view, set transformations for camera (translate, rotate by each axis), toggle depth test, select a geometry and move, rotate, scale, shear, and reflect it (all of this by each of axis too), toggle auto rotating of the geometry.
 - Good performance
 
