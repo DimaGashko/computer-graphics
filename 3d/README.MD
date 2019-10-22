@@ -21,7 +21,7 @@ p.s. on mobile there's only two ways to move the camera - 'auto mode' or
 Some 'F's and cubes live on the scene in the demo. You can manipulate them by controls panel on the right.
 You need select the Geometry first (see videos for example).
 
-There's a lot of controls of the demo, camera and geometries. You can see how use them in the videos (some of last ones).
+There's a lot of controls of the demo, camera and geometries. You can see how to use them in the videos (some of last ones).
 
 All transformations are provided by affine transformations (it's the demo heart).
 
