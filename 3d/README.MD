@@ -18,7 +18,7 @@ There's list of keys to use in the demo:
 p.s. on mobile there's only two ways to move the camera - 'auto mode' or
 'manual transformations in 'camera' folder of controls
 
-Some 'F's and cubes live on the scene. You can manipulate them by controls panel on the right.
+Some 'F's and cubes live on the scene in the demo. You can manipulate them by controls panel on the right.
 You need select the Geometry first (see videos for example).
 
 There's a lot of controls of demo, camera and geometries. You can see how use them in the videos (some of last ones).
