@@ -7,7 +7,7 @@ YouTube: https://youtu.be/zXDDdbCWFTk
 ![The Example](./src/assets/3d.png)
 
 In this demo 'the 3d' was drawn. The demo world is game-like world. You can click on the scene to
-show 'game' cursor insted of real cursor. To rotate the camera you can use your mouse, for move the camera - your keyboard.
+show 'game' cursor instead of real cursor. To rotate the camera you can use your mouse, for move the camera - your keyboard.
 
 There's list of keys to use in the demo:
 
