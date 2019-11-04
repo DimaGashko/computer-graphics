@@ -225,7 +225,6 @@ function drawFrame() {
 
     gl.useProgram(program);
 
-
     update();
 
     ((DEPTH_TEST) ? geometries : geometries.slice().reverse()).forEach((glGeometry) => {
@@ -500,7 +499,6 @@ function initGui() {
     other.add(options, 'DEPTH_TEST');
 
     initGeometryGui(geometryFolder);
-
 }
 
 function initGeometryGui(geometryFolder: dat.GUI) {

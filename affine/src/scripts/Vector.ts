@@ -8,6 +8,11 @@ export default class Vector {
       return new Vector(this.x, this.y);
    }
 
+   set([x, y]: number[]) { 
+      this.x = x;
+      this.y = y;
+   }
+
    add(v: Vector) { 
       this.x += v.x;
       this.y += v.y;

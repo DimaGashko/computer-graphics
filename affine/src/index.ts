@@ -9,10 +9,8 @@ import _font from './font';
 import Vector from './scripts/Vector';
 import matrixMulMatrix from './scripts/matrix/matrixMulMatrix';
 import matrix3x3MulVec from './scripts/matrix/matrix3x3MulVec';
-import VirtualCanvas from './scripts/VirtualCanvas';
 
 import { scale, translate, reflection, rotate, shear } from './affine';
-import invert3x3Matrix from './scripts/matrix/invert3x3Matrix';
 
 type Line = [number, number, number, number];
 type Char = Line[];
@@ -69,7 +67,9 @@ const options = {
     tCenterX: 0,
     tCenterY: 0,
 
-    noGaps: false,
+    fill: false,
+    border: false,
+
     resetWorldCoords: () => {
         coords = initialCoords.copy();
     }
@@ -83,13 +83,9 @@ let tMatrix = [
     [1, 0, 0],
     [0, 1, 0],
     [0, 0, 1],
-]
+];
 
-let invertTMatrix: number[][];
-
-const virtualCanvas = new VirtualCanvas();
 let charStart = 0;
-
 let maxLen = 25;
 
 (<any>window).set = (m: number[][]) => {
@@ -113,10 +109,6 @@ function start() {
 
 function drawFrame() {
     ctx.save();
-
-    if (options.noGaps) {
-        options.worldZoom = Math.max(options.worldZoom, 1);
-    }
 
     initStyles();
     useKeyboard();
@@ -172,13 +164,13 @@ function initEvents() {
     initTCenterEvents();
 }
 
-function initTCenterEvents() { 
+function initTCenterEvents() {
     const hammer = new Hammer($.tCenter);
     hammer.get('pinch').set({ enable: true });
 
     hammer.on('pan panstart', ({ center }) => {
         const pos = toWorld(new Vector(center.x, center.y));
-        
+
         options.tCenterX = pos.x;
         options.tCenterY = pos.y;
     });
@@ -203,37 +195,6 @@ function updateTMatrix() {
 
 function draw() {
     drawText(options.text.slice(0, maxLen).toUpperCase());
-    if (!options.noGaps) return;
-
-    const z = options.worldZoom;
-
-    const start = new Vector(0, 0);
-    const end = screenSize.copy();
-
-    const step = Math.min(z ^ 0, 1);
-    const steps = end.sub(start).div(new Vector(step, step));
-
-    for (let i = 0; i < steps.x; i++) {
-        for (let j = 0; j < steps.y; j++) {
-            const viewX = start.x + i * step;
-            const viewY = start.y + j * step;
-
-            let { x, y } = toWorld(new Vector(viewX, viewY));
-
-            x -= options.tCenterX;
-            y -= options.tCenterY;
-
-            [x, y] = matrix3x3MulVec(invertTMatrix, [x, y, 1]);
-
-            x += options.tCenterX;
-            y += options.tCenterY;
-
-            if (!virtualCanvas.check(x, y)) continue;
-
-            ctx.fillRect(viewX, viewY, z, z);
-        }
-    }
-
 }
 
 function drawText(text: string) {
@@ -251,7 +212,7 @@ function drawLetterSpace() {
 }
 
 function drawCharacter(char: Char) {
-    char.forEach((l) => {
+    char.map(transformLine).forEach((l) => {
         drawLine(l[0], l[1], l[2], l[3]);
     });
 }
@@ -292,21 +253,31 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
 }
 
 function drawPixel(x: number, y: number) {
-    if (options.noGaps) {
-        virtualCanvas.setPixel(x + charStart ^ 0, y, true);
-    } else {
-        x = x + charStart - options.tCenterX;
-        y = y - options.tCenterY;
+    const z = options.worldZoom;
 
-        [x, y] = matrix3x3MulVec(tMatrix, [x, y, 1]);
+    ({ x, y } = toView(new Vector(x, y)));
+    ctx.fillRect(x ^ 0, y ^ 0, z, z);
+}
 
-        x += options.tCenterX;
-        y += options.tCenterY;
+function transformLine([x1, y1, x2, y2]: Line): Line {
+    const begin = transformPoint(new Vector(x1, y1));
+    const end = transformPoint(new Vector(x2, y2));
 
-        ({ x, y } = toView(new Vector(x, y)));
-        const z = options.worldZoom;
-        ctx.fillRect(x ^ 0, y ^ 0, z, z);
-    }
+    return [begin.x, begin.y, end.x, end.y];
+}
+
+function transformPoint(point: Vector) { 
+    point = point.copy();
+
+    point.x += charStart - options.tCenterX;
+    point.y -= options.tCenterY;
+
+    point.set(matrix3x3MulVec(tMatrix, [point.x, point.y, 1]));
+
+    point.x += options.tCenterX;
+    point.x += options.tCenterY;
+
+    return point;
 }
 
 function drawAllGrids() {
@@ -391,7 +362,7 @@ function useKeyboard() {
 
     const type = (document.activeElement === $.tCenter)
         ? 'tCenter' : 'coords';
-    
+
     const targ = (type === 'coords')
         ? coords : new Vector(options.tCenterX, options.tCenterY);
 
@@ -438,10 +409,7 @@ function clearCanvas() {
 }
 
 function clear() {
-    virtualCanvas.clear();
     charStart = 0;
-
-    invertTMatrix = invert3x3Matrix(tMatrix);
 }
 
 function font2CharMap(font: Font) {
@@ -456,31 +424,33 @@ function font2CharMap(font: Font) {
 
 function initGui() {
     const setup = gui.addFolder('Setup');
-
     setup.addColor(options, 'color');
     setup.add(options, 'text');
-    setup.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
-    setup.add(options, 'noGaps');
     setup.add(options, 'resetWorldCoords');
+    setup.open();
 
     const base = gui.addFolder('Main Transformations');
     base.add(options, 'worldZoom', 0.05, 50, 0.05)
     base.add(options, 'zoomX', 0.1, 3, 0.1).onChange(updateTMatrix);
     base.add(options, 'zoomY', 0.1, 3, 0.1).onChange(updateTMatrix);
     base.add(options, 'deg', 0, Math.PI * 2, 0.01).onChange(updateTMatrix);
+    base.open();
 
-    const other = gui.addFolder('Additional Transformations');
-    other.add(options, 'translateX', -500, 500, 1).onChange(updateTMatrix);
-    other.add(options, 'translateY', -500, 500, 1).onChange(updateTMatrix);
-    other.add(options, 'shearX', -3, 3, 0.1).onChange(updateTMatrix);
-    other.add(options, 'shearY', -3, 3, 0.1).onChange(updateTMatrix);
-    other.add(options, 'reflectX').onChange(updateTMatrix);
-    other.add(options, 'reflectY').onChange(updateTMatrix);
+    const additional = gui.addFolder('Additional Transformations');
+    additional.add(options, 'translateX', -500, 500, 1).onChange(updateTMatrix);
+    additional.add(options, 'translateY', -500, 500, 1).onChange(updateTMatrix);
+    additional.add(options, 'shearX', -3, 3, 0.1).onChange(updateTMatrix);
+    additional.add(options, 'shearY', -3, 3, 0.1).onChange(updateTMatrix);
+    additional.add(options, 'reflectX').onChange(updateTMatrix);
+    additional.add(options, 'reflectY').onChange(updateTMatrix);
 
     const tCenter = gui.addFolder('Transformation Center');
     tCenter.add(options, 'tCenterX', -500, 500, 0.1);
     tCenter.add(options, 'tCenterY', -500, 500, 0.1);
 
-    setup.open();
-    base.open();
+    const other = gui.addFolder('Other');
+    other.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
+    other.add(options, 'fill');
+    other.add(options, 'border');
+
 }
