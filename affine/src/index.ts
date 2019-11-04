@@ -50,7 +50,7 @@ const KEYS = {
 
 const options = {
     color: '#0f0',
-    text: 'A5',
+    text: 'DA5',
     letterSpacing: 0.8,
     worldZoom: 3,
 
