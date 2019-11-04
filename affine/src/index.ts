@@ -90,8 +90,8 @@ let charStart = 0;
 let maxLen = 25;
 
 let boundingBox = [
-    new Vector(),
-    new Vector(),
+    new Vector(Infinity, Infinity),
+    new Vector(-Infinity, -Infinity),
 ];
 
 (<any>window).set = (m: number[][]) => {
@@ -201,7 +201,7 @@ function updateTMatrix() {
 function draw() {
     drawAllGrids();
     drawText(options.text.slice(0, maxLen).toUpperCase());
-
+    
     if (options.box) {
         charStart = 0;
         drawBox();
@@ -322,28 +322,25 @@ function drawBox() {
 function drawBoundingBox() {
     const [a, b] = boundingBox;
 
-    // const points: [number, number][] = [
-    //     [a.x, a.y],
-    //     [a.x, b.y],
-    //     [b.x, b.y],
-    //     [b.x, a.y],
-    // ].map(([x, y]) => {
-    //     ({ x, y } = toView(point));
-    //     return [x, y];
-    // });
+    const points: [number, number][] = [
+        [a.x, a.y],
+        [a.x, b.y],
+        [b.x, b.y],
+        [b.x, a.y],
+    ];
 
-    // ctx.save();
-    // ctx.lineWidth = Math.ceil(options.worldZoom / 2);
+    ctx.save();
+    ctx.lineWidth = Math.ceil(options.worldZoom / 2);
 
-    // ctx.beginPath();
+    ctx.beginPath();
 
-    // ctx.moveTo(...points[0]);
-    // points.slice(1).forEach(([x, y]) => ctx.lineTo(x, y));
+    ctx.moveTo(...points[0]);
+    points.slice(1).forEach(([x, y]) => ctx.lineTo(x, y));
 
-    // ctx.closePath();
-    // ctx.stroke();
+    ctx.closePath();
+    ctx.stroke();
 
-    // ctx.restore();
+    ctx.restore();
 }
 
 function getBox(): [Vector, Vector] {
@@ -509,6 +506,11 @@ function clearCanvas() {
 
 function clear() {
     charStart = 0;
+
+    boundingBox = [
+        new Vector(Infinity, Infinity),
+        new Vector(-Infinity, -Infinity),
+    ];
 }
 
 function font2CharMap(font: Font) {
