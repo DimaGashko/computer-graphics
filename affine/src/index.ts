@@ -69,7 +69,8 @@ const options = {
 
     fill: false,
     border: false,
-    box: true,
+    box: false,
+    boundingBox: false,
 
     resetWorldCoords: () => {
         coords = initialCoords.copy();
@@ -201,13 +202,9 @@ function updateTMatrix() {
 function draw() {
     drawAllGrids();
     drawText(options.text.slice(0, maxLen).toUpperCase());
-    
-    if (options.box) {
-        charStart = 0;
-        drawBox();
-    }
 
-    drawBoundingBox();
+    if (options.box) drawBox();
+    if (options.boundingBox) drawBoundingBox();
 }
 
 function drawText(text: string) {
@@ -218,6 +215,8 @@ function drawText(text: string) {
         drawCharacter(char);
         drawLetterSpace();
     });
+
+    charStart = 0;
 }
 
 function drawLetterSpace() {
@@ -225,7 +224,7 @@ function drawLetterSpace() {
 }
 
 function drawCharacter(char: Char) {
-    char.map(transformLine).map(([x1, y1, x2, y2]) => { 
+    char.map(transformLine).map(([x1, y1, x2, y2]) => {
         const a = toView(new Vector(x1, y1));
         const b = toView(new Vector(x2, y2));
 
@@ -554,4 +553,5 @@ function initGui() {
     other.add(options, 'fill');
     other.add(options, 'border');
     other.add(options, 'box');
+    other.add(options, 'boundingBox');
 }
