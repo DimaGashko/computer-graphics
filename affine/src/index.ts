@@ -217,7 +217,6 @@ function drawCharacter(char: Char) {
     });
 }
 
-
 function drawLine(x1: number, y1: number, x2: number, y2: number) {
     const incX = Math.sign(x2 - x1);
     const incY = Math.sign(y2 - y1);
@@ -256,6 +255,11 @@ function drawPixel(x: number, y: number) {
     const z = options.worldZoom;
 
     ({ x, y } = toView(new Vector(x, y)));
+
+    if (x < 0 || y < 0 || x > screenSize.x || y > screenSize.y) {
+        return;
+    }
+
     ctx.fillRect(x ^ 0, y ^ 0, z, z);
 }
 
@@ -275,7 +279,7 @@ function transformPoint(point: Vector) {
     point.set(matrix3x3MulVec(tMatrix, [point.x, point.y, 1]));
 
     point.x += options.tCenterX;
-    point.x += options.tCenterY;
+    point.y += options.tCenterY;
 
     return point;
 }
