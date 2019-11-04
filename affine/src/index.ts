@@ -69,6 +69,7 @@ const options = {
 
     fill: false,
     border: false,
+    boundingBox: true,
 
     resetWorldCoords: () => {
         coords = initialCoords.copy();
@@ -114,7 +115,6 @@ function drawFrame() {
     useKeyboard();
 
     clear();
-    drawAllGrids();
     draw();
     moveTCenter();
 
@@ -194,7 +194,12 @@ function updateTMatrix() {
 
 
 function draw() {
+    drawAllGrids();
     drawText(options.text.slice(0, maxLen).toUpperCase());
+
+    if (options.boundingBox) {
+        drawBoundingBox();
+    }
 }
 
 function drawText(text: string) {
@@ -235,7 +240,7 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
 
     for (let i = 0; i <= d; i++) {
         xErr += dx;
-        yErr += dy; 
+        yErr += dy;
 
         if (xErr > d) {
             xErr -= d;
@@ -263,6 +268,36 @@ function drawPixel(x: number, y: number) {
     ctx.fillRect(x ^ 0, y ^ 0, z, z);
 }
 
+function drawBoundingBox() {
+    const [a, b] = getBoundingBox()
+        .map(p => { p.x ^= 0; p.y ^= 0; return p })
+        .map(p => toView(p));
+
+    ctx.save();
+    ctx.lineWidth = options.worldZoom ^ 0;
+
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(a.x, b.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.lineTo(b.x, a.y);
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.restore();
+}
+
+function getBoundingBox(): [Vector, Vector] {
+    const len = Math.min(options.text.length, maxLen);
+    const one = font.size;
+    const spacing = options.letterSpacing;
+
+    return [
+        new Vector(0, 0),
+        new Vector(one + one * spacing * (len - 1), one * 1.08),
+    ];
+}
+
 function transformLine([x1, y1, x2, y2]: Line): Line {
     const begin = transformPoint(new Vector(x1, y1));
     const end = transformPoint(new Vector(x2, y2));
@@ -270,7 +305,7 @@ function transformLine([x1, y1, x2, y2]: Line): Line {
     return [begin.x, begin.y, end.x, end.y];
 }
 
-function transformPoint(point: Vector) { 
+function transformPoint(point: Vector) {
     point = point.copy();
 
     point.x += charStart - options.tCenterX;
@@ -391,6 +426,7 @@ function moveTCenter() {
 
 function initStyles() {
     ctx.fillStyle = options.color;
+    ctx.strokeStyle = options.color;
 }
 
 function resize() {
@@ -456,4 +492,5 @@ function initGui() {
     other.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
     other.add(options, 'fill');
     other.add(options, 'border');
+    other.add(options, 'boundingBox');
 }
