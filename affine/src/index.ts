@@ -196,8 +196,9 @@ function updateTMatrix() {
 function draw() {
     drawAllGrids();
     drawText(options.text.slice(0, maxLen).toUpperCase());
-
+    
     if (options.boundingBox) {
+        charStart = 0;
         drawBoundingBox();
     }
 }
