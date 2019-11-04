@@ -217,14 +217,14 @@ function drawCharacter(char: Char) {
     });
 }
 
+
 function drawLine(x1: number, y1: number, x2: number, y2: number) {
     const incX = Math.sign(x2 - x1);
     const incY = Math.sign(y2 - y1);
 
     const dx = Math.abs(x2 - x1);
     const dy = Math.abs(y2 - y1);
-
-    const d = (dx > dy) ? dx : dy;
+    const d = Math.max(dx, dy);
 
     let x = x1;
     let y = y1;
@@ -234,9 +234,9 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
 
     drawPixel(x, y);
 
-    for (let i = 0; i < d; i++) {
+    for (let i = 0; i <= d; i++) {
         xErr += dx;
-        yErr += dy;
+        yErr += dy; 
 
         if (xErr > d) {
             xErr -= d;
@@ -431,8 +431,8 @@ function initGui() {
 
     const base = gui.addFolder('Main Transformations');
     base.add(options, 'worldZoom', 0.05, 50, 0.05)
-    base.add(options, 'zoomX', 0.1, 3, 0.1).onChange(updateTMatrix);
-    base.add(options, 'zoomY', 0.1, 3, 0.1).onChange(updateTMatrix);
+    base.add(options, 'zoomX', 0.3, 3, 0.1).onChange(updateTMatrix);
+    base.add(options, 'zoomY', 0.3, 3, 0.1).onChange(updateTMatrix);
     base.add(options, 'deg', 0, Math.PI * 2, 0.01).onChange(updateTMatrix);
     base.open();
 
@@ -452,5 +452,4 @@ function initGui() {
     other.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
     other.add(options, 'fill');
     other.add(options, 'border');
-
 }
