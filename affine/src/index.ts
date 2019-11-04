@@ -269,18 +269,27 @@ function drawPixel(x: number, y: number) {
 }
 
 function drawBoundingBox() {
-    const [a, b] = getBoundingBox()
-        .map(p => { p.x ^= 0; p.y ^= 0; return p })
-        .map(p => toView(p));
+    const [a, b] = getBoundingBox();
+
+    const points: [number, number][] = [
+        [a.x, a.y],
+        [a.x, b.y],
+        [b.x, b.y],
+        [b.x, a.y],
+    ].map(([x, y]) => {
+        const point = transformPoint(new Vector(x, y));
+        ({ x, y } = toView(point));
+        return [x, y];
+    });
 
     ctx.save();
-    ctx.lineWidth = options.worldZoom ^ 0;
+    ctx.lineWidth = Math.ceil(options.worldZoom / 2);
 
     ctx.beginPath();
-    ctx.moveTo(a.x, a.y);
-    ctx.lineTo(a.x, b.y);
-    ctx.lineTo(b.x, b.y);
-    ctx.lineTo(b.x, a.y);
+
+    ctx.moveTo(...points[0]);
+    points.slice(1).forEach(([x, y]) => ctx.lineTo(x, y));
+
     ctx.closePath();
     ctx.stroke();
 
