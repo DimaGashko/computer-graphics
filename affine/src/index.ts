@@ -69,7 +69,7 @@ const options = {
 
     fill: false,
     border: false,
-    boundingBox: true,
+    box: true,
 
     resetWorldCoords: () => {
         coords = initialCoords.copy();
@@ -88,6 +88,11 @@ let tMatrix = [
 
 let charStart = 0;
 let maxLen = 25;
+
+let boundingBox = [
+    new Vector(),
+    new Vector(),
+];
 
 (<any>window).set = (m: number[][]) => {
     tMatrix = m;
@@ -196,11 +201,13 @@ function updateTMatrix() {
 function draw() {
     drawAllGrids();
     drawText(options.text.slice(0, maxLen).toUpperCase());
-    
-    if (options.boundingBox) {
+
+    if (options.box) {
         charStart = 0;
-        drawBoundingBox();
+        drawBox();
     }
+
+    drawBoundingBox();
 }
 
 function drawText(text: string) {
@@ -218,17 +225,34 @@ function drawLetterSpace() {
 }
 
 function drawCharacter(char: Char) {
-    char.map(transformLine).forEach((l) => {
+    char.map(transformLine).map(([x1, y1, x2, y2]) => { 
+        const a = toView(new Vector(x1, y1));
+        const b = toView(new Vector(x2, y2));
+
+        return [a.x, a.y, b.x, b.y];
+    }).forEach((l) => {
+        let [x1, y1, x2, y2] = l.slice();
+
+        if (x1 > x2) [x1, x2] = [x2, x1];
+        if (y1 > y2) [y1, y2] = [y2, y1];
+
+        if (x1 < boundingBox[0].x) boundingBox[0].x = x1;
+        if (y1 < boundingBox[0].y) boundingBox[0].y = y1;
+        if (x2 > boundingBox[1].x) boundingBox[1].x = x2;
+        if (y2 > boundingBox[1].y) boundingBox[1].y = y2;
+
         drawLine(l[0], l[1], l[2], l[3]);
     });
 }
 
 function drawLine(x1: number, y1: number, x2: number, y2: number) {
-    const incX = Math.sign(x2 - x1);
-    const incY = Math.sign(y2 - y1);
+    const z = options.worldZoom;
 
-    const dx = Math.abs(x2 - x1);
-    const dy = Math.abs(y2 - y1);
+    const incX = Math.sign(x2 - x1) * z;
+    const incY = Math.sign(y2 - y1) * z;
+
+    const dx = Math.abs(x2 - x1) / z;
+    const dy = Math.abs(y2 - y1) / z;
     const d = Math.max(dx, dy);
 
     let x = x1;
@@ -260,8 +284,6 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
 function drawPixel(x: number, y: number) {
     const z = options.worldZoom;
 
-    ({ x, y } = toView(new Vector(x, y)));
-
     if (x < 0 || y < 0 || x > screenSize.x || y > screenSize.y) {
         return;
     }
@@ -269,8 +291,8 @@ function drawPixel(x: number, y: number) {
     ctx.fillRect(x ^ 0, y ^ 0, z, z);
 }
 
-function drawBoundingBox() {
-    const [a, b] = getBoundingBox();
+function drawBox() {
+    const [a, b] = getBox();
 
     const points: [number, number][] = [
         [a.x, a.y],
@@ -297,7 +319,34 @@ function drawBoundingBox() {
     ctx.restore();
 }
 
-function getBoundingBox(): [Vector, Vector] {
+function drawBoundingBox() {
+    const [a, b] = boundingBox;
+
+    // const points: [number, number][] = [
+    //     [a.x, a.y],
+    //     [a.x, b.y],
+    //     [b.x, b.y],
+    //     [b.x, a.y],
+    // ].map(([x, y]) => {
+    //     ({ x, y } = toView(point));
+    //     return [x, y];
+    // });
+
+    // ctx.save();
+    // ctx.lineWidth = Math.ceil(options.worldZoom / 2);
+
+    // ctx.beginPath();
+
+    // ctx.moveTo(...points[0]);
+    // points.slice(1).forEach(([x, y]) => ctx.lineTo(x, y));
+
+    // ctx.closePath();
+    // ctx.stroke();
+
+    // ctx.restore();
+}
+
+function getBox(): [Vector, Vector] {
     const len = Math.min(options.text.length, maxLen);
     const one = font.size;
     const spacing = options.letterSpacing;
@@ -502,5 +551,5 @@ function initGui() {
     other.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
     other.add(options, 'fill');
     other.add(options, 'border');
-    other.add(options, 'boundingBox');
+    other.add(options, 'box');
 }
