@@ -225,6 +225,9 @@ function draw() {
 
     drawAllGrids();
     textPixels.forEach(c => c.map((p) => drawPixel(p)));
+
+    const z = options.worldZoom;
+    textPixels.forEach(c => drawPixel(c[0].add(new Vector(z, z))));
     
     if (options.boundingBox) drawBoundingBox();
 
