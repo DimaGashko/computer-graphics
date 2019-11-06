@@ -199,11 +199,8 @@ function updateTMatrix() {
         return matrixMulMatrix(prev, cur);
     });
 
-
-
     (<any>window).tm = tMatrix;
 }
-
 
 function draw() {
     const text = options.text.slice(0, maxLen).toUpperCase();
@@ -223,15 +220,15 @@ function draw() {
         }
     }
 
-    drawAllGrids();
     textPixels.forEach(c => c.map((p) => drawPixel(p)));
 
     const z = options.worldZoom;
 
-    if (options.fill || 1) {
-        fill(textPixels.map(c => c[0].add(new Vector(z, z))));
+    if (options.fill) {
+        fill(textPixels.map(c => c[0].add(new Vector(z * 2, z * 2))));
     }
 
+    drawAllGrids();
     if (options.boundingBox) drawBoundingBox();
 
     clear();
@@ -264,7 +261,7 @@ function getPixelsOfCharacter(char: Char) {
         const b = toView(new Vector(x2, y2));
 
         return [a.x, a.y, b.x, b.y];
-    }).map((l) => {
+    }).map(l => l.map(p => Math.round(p))).map((l) => {
         let [x1, y1, x2, y2] = l.slice();
 
         if (x1 > x2) [x1, x2] = [x2, x1];
@@ -325,7 +322,7 @@ function drawPixel({ x, y }: Vector) {
         return;
     }
 
-    ctx.fillRect(x ^ 0, y ^ 0, z, z);
+    ctx.fillRect(x, y, z, z);
 }
 
 function drawBox() {
@@ -381,32 +378,45 @@ function drawBoundingBox() {
 }
 
 function fill(starts: Vector[]) {
-    const [begin, end] = boundingBox;
-
     const d = ctx.getImageData(0, 0, screenSize.x, screenSize.y);
-    const { width, data } = d;
 
-    for (let x = 100; x < 500; x++) {
-        for (let y = 100; y < 500; y++) {
-            setPixel(d, x, y, [255, 0, 0, 1]);     
-        }
-    }
+    let i = 0;
 
     starts.forEach(({ x, y }) => {
-        if (getPixel(d, x, y)[3] !== 1) return;
-        setPixel(d, x, y, [255, 0, 0, 1]);
-        setPixel(d, x + 1, y + 1, [255, 0, 0, 1]);
+        try {
+            runFillForPixel(d, x, y);
+        } catch { };
     });
 
     ctx.putImageData(d, 0, 0);
 }
 
+function runFillForPixel(d: ImageData, x: number, y: number) {
+    if (x < 0 || y < 0 || x > screenSize.x || y > screenSize.y) return;
+    if (getPixel(d, x, y)[3] > 0) return;
+    setPixel(d, x, y, [255, 0, 0, 255]);
+
+    runFillForPixel(d, x + 1, y);
+    runFillForPixel(d, x - 1, y);
+    runFillForPixel(d, x, y + 1);
+    runFillForPixel(d, x, y - 1);
+}
+
 function getPixel({ data, width }: ImageData, x: number, y: number) {
-    return data.slice((width * y + x) * 4, 4);
+    const i = (width * Math.round(y) + Math.round(x)) * 4;
+
+    return [
+        data[i],
+        data[i + 1],
+        data[i + 2],
+        data[i + 3],
+    ]
 }
 
 function setPixel({ data, width }: ImageData, x: number, y: number, [r, g, b, a]: number[]) {
-    const i = (width * y + x) * 4;
+    if (x < 0 || y < 0) return;
+
+    const i = (width * Math.round(y) + Math.round(x)) * 4;
 
     data[i] = r;
     data[i + 1] = g;
