@@ -59,6 +59,8 @@ const options = {
 
     DEPTH_TEST: true,
 
+    primitives: 'TRIANGLES',
+
     toggleFullscreen: () => toggleFullscreen(),
 }
 
@@ -212,6 +214,7 @@ start();
 
 function drawFrame() {
     const { DEPTH_TEST, rotateSpeed, baseGlColor } = options;
+    const primitives = getPrimitives();
 
     gl.clearColor(0, 0, 0, 0);
 
@@ -250,8 +253,15 @@ function drawFrame() {
         let { r, g, b } = baseGlColor;
         gl.uniform4f(loc.baseColor, r, g, b, 1);
 
-        gl.drawArrays(gl.TRIANGLES, 0, geometry.primitiveCount);
+        gl.drawArrays(primitives, 0, geometry.primitiveCount);
     });
+}
+
+function getPrimitives() { 
+    if (options.primitives === 'TRIANGLES') return gl.TRIANGLES;
+    else if (options.primitives === 'LINES') return gl.LINE_LOOP;
+
+    throw new Error('Unknown primitive type');
 }
 
 function update() {
@@ -496,6 +506,7 @@ function initGui() {
     tCameraFolder.add(camera, 'rotateZ', -Math.PI, Math.PI, 0.05);
 
     const other = gui.addFolder('Other');
+    other.add(options, 'primitives', ['TRIANGLES', 'LINES']);
     other.add(options, 'DEPTH_TEST');
 
     initGeometryGui(geometryFolder);
