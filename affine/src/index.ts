@@ -224,12 +224,12 @@ function drawLetterSpace() {
 }
 
 function drawCharacter(char: Char) {
-    char.map(transformLine).map(([x1, y1, x2, y2]) => {
+    const pixels = char.map(transformLine).map(([x1, y1, x2, y2]) => {
         const a = toView(new Vector(x1, y1));
         const b = toView(new Vector(x2, y2));
 
         return [a.x, a.y, b.x, b.y];
-    }).forEach((l) => {
+    }).map((l) => {
         let [x1, y1, x2, y2] = l.slice();
 
         if (x1 > x2) [x1, x2] = [x2, x1];
@@ -240,12 +240,27 @@ function drawCharacter(char: Char) {
         if (x2 > boundingBox[1].x) boundingBox[1].x = x2;
         if (y2 > boundingBox[1].y) boundingBox[1].y = y2;
 
-        drawLine(l[0], l[1], l[2], l[3]);
-    });
+        return getLinePixels(l[0], l[1], l[2], l[3]);
+    }).reduce((pixels, line) => pixels.concat(line), []);
+
+    pixels.forEach(({ x, y }) => drawPixel(x, y));
+
+    if (options.fill) {
+        ctx.beginPath();
+        ctx.moveTo(pixels[0].x, pixels[0].y);
+
+        pixels.slice(1).forEach(({ x, y }) => {
+            ctx.lineTo(x, y);
+        });
+
+        ctx.closePath();
+        ctx.fill();
+    }
 }
 
-function drawLine(x1: number, y1: number, x2: number, y2: number) {
+function getLinePixels(x1: number, y1: number, x2: number, y2: number): { x: number, y: number }[] {
     const z = options.worldZoom;
+    const pixels = [];
 
     const incX = Math.sign(x2 - x1) * z;
     const incY = Math.sign(y2 - y1) * z;
@@ -260,7 +275,7 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
     let xErr = 0;
     let yErr = 0;
 
-    drawPixel(x, y);
+    pixels.push({ x, y });
 
     for (let i = 0; i <= d; i++) {
         xErr += dx;
@@ -276,8 +291,10 @@ function drawLine(x1: number, y1: number, x2: number, y2: number) {
             y += incY;
         }
 
-        drawPixel(x, y);
+        pixels.push({ x, y });
     }
+
+    return pixels;
 }
 
 function drawPixel(x: number, y: number) {
