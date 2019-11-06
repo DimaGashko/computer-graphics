@@ -227,8 +227,11 @@ function draw() {
     textPixels.forEach(c => c.map((p) => drawPixel(p)));
 
     const z = options.worldZoom;
-    textPixels.forEach(c => drawPixel(c[0].add(new Vector(z, z))));
-    
+
+    if (options.fill || 1) {
+        fill(textPixels.map(c => c[0].add(new Vector(z, z))));
+    }
+
     if (options.boundingBox) drawBoundingBox();
 
     clear();
@@ -375,6 +378,40 @@ function drawBoundingBox() {
     ctx.stroke();
 
     ctx.restore();
+}
+
+function fill(starts: Vector[]) {
+    const [begin, end] = boundingBox;
+
+    const d = ctx.getImageData(0, 0, screenSize.x, screenSize.y);
+    const { width, data } = d;
+
+    for (let x = 100; x < 500; x++) {
+        for (let y = 100; y < 500; y++) {
+            setPixel(d, x, y, [255, 0, 0, 1]);     
+        }
+    }
+
+    starts.forEach(({ x, y }) => {
+        if (getPixel(d, x, y)[3] !== 1) return;
+        setPixel(d, x, y, [255, 0, 0, 1]);
+        setPixel(d, x + 1, y + 1, [255, 0, 0, 1]);
+    });
+
+    ctx.putImageData(d, 0, 0);
+}
+
+function getPixel({ data, width }: ImageData, x: number, y: number) {
+    return data.slice((width * y + x) * 4, 4);
+}
+
+function setPixel({ data, width }: ImageData, x: number, y: number, [r, g, b, a]: number[]) {
+    const i = (width * y + x) * 4;
+
+    data[i] = r;
+    data[i + 1] = g;
+    data[i + 2] = b;
+    data[i + 3] = a;
 }
 
 function getBox(): [Vector, Vector] {
