@@ -87,6 +87,10 @@ let tMatrix = [
     [0, 0, 1],
 ];
 
+let prevTMatrix: number[][];
+let prevCoords = coords.copy();
+let prevWorldZoom = options.worldZoom;
+
 let charStart = 0;
 let maxLen = 25;
 
@@ -195,36 +199,61 @@ function updateTMatrix() {
         return matrixMulMatrix(prev, cur);
     });
 
+
+
     (<any>window).tm = tMatrix;
 }
 
 
 function draw() {
-    drawAllGrids();
-    drawText(options.text.slice(0, maxLen).toUpperCase());
+    const text = options.text.slice(0, maxLen).toUpperCase();
+    const textPixels = getTextPixel(text);
 
-    if (options.box) drawBox();
+    const [begin, end] = boundingBox;
+
+    if (options.border) {
+        if (begin.x < 0 || begin.y < 0 || end.x > screenSize.x || end.y > screenSize.y) {
+            tMatrix = prevTMatrix;
+            coords = prevCoords.copy();
+            options.worldZoom = prevWorldZoom;
+
+            clear();
+            draw();
+            return;
+        }
+    }
+
+    drawAllGrids();
+    textPixels.forEach(c => c.map((p) => drawPixel(p)));
+    
     if (options.boundingBox) drawBoundingBox();
+
+    clear();
+    if (options.box) drawBox();
+
+    prevTMatrix = tMatrix;
+    prevCoords = coords.copy();
+    prevWorldZoom = options.worldZoom;
 }
 
-function drawText(text: string) {
-    text.split('').forEach((realChar) => {
+function getTextPixel(text: string) {
+    return text.split('').map((realChar) => {
         const char = (charMap.has(realChar))
             ? charMap.get(realChar) : font.unknown;
 
-        drawCharacter(char);
+        const pixels = getPixelsOfCharacter(char);
         drawLetterSpace();
-    });
 
-    charStart = 0;
+        return pixels;
+    });
 }
 
 function drawLetterSpace() {
     charStart += font.size * options.letterSpacing;
 }
 
-function drawCharacter(char: Char) {
-    const pixels = char.map(transformLine).map(([x1, y1, x2, y2]) => {
+function getPixelsOfCharacter(char: Char) {
+    return char.map(transformLine).map(([x1, y1, x2, y2]) => {
         const a = toView(new Vector(x1, y1));
         const b = toView(new Vector(x2, y2));
 
@@ -242,23 +271,9 @@ function drawCharacter(char: Char) {
 
         return getLinePixels(l[0], l[1], l[2], l[3]);
     }).reduce((pixels, line) => pixels.concat(line), []);
-
-    pixels.forEach(({ x, y }) => drawPixel(x, y));
-
-    if (options.fill) {
-        ctx.beginPath();
-        ctx.moveTo(pixels[0].x, pixels[0].y);
-
-        pixels.slice(1).forEach(({ x, y }) => {
-            ctx.lineTo(x, y);
-        });
-
-        ctx.closePath();
-        ctx.fill();
-    }
 }
 
-function getLinePixels(x1: number, y1: number, x2: number, y2: number): { x: number, y: number }[] {
+function getLinePixels(x1: number, y1: number, x2: number, y2: number): Vector[] {
     const z = options.worldZoom;
     const pixels = [];
 
@@ -275,7 +290,7 @@ function getLinePixels(x1: number, y1: number, x2: number, y2: number): { x: num
     let xErr = 0;
     let yErr = 0;
 
-    pixels.push({ x, y });
+    pixels.push(new Vector(x, y));
 
     for (let i = 0; i <= d; i++) {
         xErr += dx;
@@ -291,13 +306,13 @@ function getLinePixels(x1: number, y1: number, x2: number, y2: number): { x: num
             y += incY;
         }
 
-        pixels.push({ x, y });
+        pixels.push(new Vector(x, y));
     }
 
     return pixels;
 }
 
-function drawPixel(x: number, y: number) {
+function drawPixel({ x, y }: Vector) {
     const z = options.worldZoom;
 
     if (x < 0 || y < 0 || x > screenSize.x || y > screenSize.y) {
