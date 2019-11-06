@@ -218,13 +218,25 @@ function drawFrame() {
 
     gl.clearColor(0, 0, 0, 0);
 
-    if (DEPTH_TEST) {
-        gl.clear(gl.COLOR_BUFFER_BIT || gl.DEPTH_BUFFER_BIT);
-        gl.enable(gl.DEPTH_TEST);
-    } else {
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.disable(gl.DEPTH_TEST);
-    }
+    // if (DEPTH_TEST) {
+    //     gl.clear(gl.COLOR_BUFFER_BIT || gl.DEPTH_BUFFER_BIT);
+    //     gl.enable(gl.DEPTH_TEST);
+    // } else {
+    //     gl.clear(gl.COLOR_BUFFER_BIT);
+    //     gl.disable(gl.DEPTH_TEST);
+    // }
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    
+    gl.enable(gl.CULL_FACE);
+
+    //gl.enable(gl.DEPTH_TEST);
+    //gl.depthFunc(gl)
+    //gl.depthMask(false);
+    
 
     gl.useProgram(program);
 
