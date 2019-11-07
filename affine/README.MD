@@ -16,7 +16,6 @@ All transformations (excluded worlds zoom and translate) provide by matrixes ([a
 ## Features
 
 - Available transformations: zoom, scale, shear, translate and reflet
-- noGaps options provide better quality for transformations (no gaps between pixels after transformations)
 - Select transformations center
 - World Zoom and Drag & drop
 - Available Symbols: A, D, 5
