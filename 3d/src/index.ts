@@ -1,7 +1,10 @@
 import 'normalize.scss/normalize.scss';
 import './index.scss';
 
-import imgSrc from './assets/outlines.png';
+import outlineTexSrc from './assets/outlines.png';
+import wallTexSrc from './assets/wall.jpeg';
+import wall2TexSrc from './assets/wall2.jpg';
+import floorTexSrc from './assets/floor.jpg';
 
 import vShaderSource from './shaders/v.glsl';
 import fShaderSource from './shaders/f.glsl';
@@ -20,6 +23,7 @@ import FGeometry from './geometries/FGeometry/FGeometry';
 import GlGeometry from './geometries/GlGeometry';
 import FpsCorrection from './scripts/FpsCorrection';
 import CubeGeometry from './geometries/CubeGeometry/CubeGeometry';
+import Texture from './geometries/Texture';
 
 const $: {
     canvas?: HTMLCanvasElement,
@@ -42,15 +46,22 @@ const loc = {
     tMatrix: gl.getUniformLocation(program, 'tMatrix'),
     baseColor: gl.getUniformLocation(program, 'baseColor'),
     time: gl.getUniformLocation(program, 'time'),
-    tex: gl.getUniformLocation(program, 'texture'),
 
     useTexture: gl.getUniformLocation(program, 'useTexture'),
+    texture: gl.getUniformLocation(program, 'texture'),
 }
 
 const gui = new dat.GUI();
 const fpsCorrection = new FpsCorrection().start();
 
 const worldRadius = 2500;
+
+const textures: { [name: string]: Texture } = {
+    'wall': new Texture(gl, wallTexSrc),
+    'wall2': new Texture(gl, wall2TexSrc),
+    'floor': new Texture(gl, floorTexSrc),
+    'outlines': new Texture(gl, outlineTexSrc),
+}
 
 const options = {
     baseColor: '#f9ff00',
@@ -64,7 +75,8 @@ const options = {
     baseGlColor: null,
 
     DEPTH_TEST: true,
-    useTexture: false,
+    useTexture: true,
+    texture: 'wall',
     primitives: 'TRIANGLES',
 
     toggleFullscreen: () => toggleFullscreen(),
@@ -111,12 +123,6 @@ let time = 0;
 let viewMatrix: TMatrix;
 
 const geometries: GlGeometry[] = [];
-
-const texture = gl.createTexture();
-gl.bindTexture(gl.TEXTURE_2D, texture);
-
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
-    new Uint8Array([255, 0, 0, 255]));
 
 const texcoordsBuf = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, texcoordsBuf);
@@ -224,20 +230,11 @@ geometries.push(...new Array(125).fill(0)
 
 options.baseGlColor = hexToGlColor(options.baseColor);
 
-loadImg(imgSrc).then((img) => {
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-    gl.generateMipmap(gl.TEXTURE_2D);
-
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
-
-    initEvents();
-    resize();
-    initGui();
-    start();
-}).catch(e => console.error(e));
-
+updateTexture();
+initEvents();
+resize();
+initGui();
+start();
 
 function drawFrame() {
     const { DEPTH_TEST, rotateSpeed, baseGlColor } = options;
@@ -256,9 +253,11 @@ function drawFrame() {
     
     gl.cullFace(gl.FRONT);
 
-    if (options.useTexture) {
+    if (options.texture === 'outlines') {
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    } else {
+        gl.disable(gl.BLEND);
     }
 
     gl.useProgram(program);
@@ -287,9 +286,9 @@ function drawFrame() {
         gl.vertexAttribPointer(loc.aTexcoords, 2, gl.FLOAT, false, 0, 0);
 
         gl.uniformMatrix4fv(loc.tMatrix, false, geometry.tMatrix.matrix);
-        gl.uniform1i(loc.tex, 0);
         gl.uniform1f(loc.time, time);
-        gl.uniform1f(loc.useTexture, options.useTexture ? 1 : 0);
+        gl.uniform1f(loc.useTexture, (options.useTexture) ? 1 : 0);
+        gl.uniform1i(loc.texture, 0);
 
         let { r, g, b } = baseGlColor;
         gl.uniform4f(loc.baseColor, r, g, b, 1);
@@ -515,15 +514,10 @@ function getActiveGeometryOptions() {
     return geometries[index];
 }
 
-function loadImg(src: string): Promise<HTMLImageElement> {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-
-        img.src = src;
-    });
+function updateTexture() { 
+    const texture = textures[options.texture];
+    texture.load();
+    gl.bindTexture(gl.TEXTURE_2D, texture.texture);
 }
 
 function initGui() {
@@ -560,6 +554,7 @@ function initGui() {
     const other = gui.addFolder('Other');
     other.add(options, 'primitives', ['TRIANGLES', 'LINES']);
     other.add(options, 'useTexture');
+    other.add(options, 'texture', Object.keys(textures)).onChange(updateTexture);
     other.add(options, 'DEPTH_TEST');
 
     initGeometryGui(geometryFolder);
