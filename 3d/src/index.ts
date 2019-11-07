@@ -1,7 +1,7 @@
 import 'normalize.scss/normalize.scss';
 import './index.scss';
 
-import imgSrc from './assets/img.png';
+import imgSrc from './assets/floor.jpg';
 
 import vShaderSource from './shaders/v.glsl';
 import fShaderSource from './shaders/f.glsl';
@@ -135,7 +135,7 @@ gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
 
 const texcoordsBuf = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, texcoordsBuf);
-const data = " 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0,".repeat(1000).split(',').map(n => +n);
+const data = " 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0,".repeat(50).split(',').map(n => +n);
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([...data]), gl.STATIC_DRAW);
 
 geometries.push(...[
@@ -244,12 +244,14 @@ loadImg(imgSrc).then((img) => {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
     gl.generateMipmap(gl.TEXTURE_2D);
 
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
 
     initEvents();
     resize();
     initGui();
     start();
-});
+}).catch(e => console.error(e));
 
 
 function drawFrame() {
@@ -294,9 +296,9 @@ function drawFrame() {
         gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer);
         gl.vertexAttribPointer(loc.aPosition, 3, gl.FLOAT, false, 0, 0);
 
-        // gl.enableVertexAttribArray(loc.aColor);
-        // gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
-        // gl.vertexAttribPointer(loc.aColor, 3, gl.UNSIGNED_BYTE, true, 0, 0);
+        gl.enableVertexAttribArray(loc.aColor);
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
+        gl.vertexAttribPointer(loc.aColor, 3, gl.UNSIGNED_BYTE, true, 0, 0);
 
         gl.enableVertexAttribArray(loc.aTexcoords);
         gl.bindBuffer(gl.ARRAY_BUFFER, texcoordsBuf);
@@ -312,8 +314,6 @@ function drawFrame() {
         gl.drawArrays(primitives, 0, geometry.primitiveCount);
     });
 }
-
-
 
 function getPrimitives() {
     if (options.primitives === 'TRIANGLES') return gl.TRIANGLES;
