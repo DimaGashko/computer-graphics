@@ -1,23 +1,18 @@
 import 'normalize.scss/normalize.scss';
 import './index.scss';
 
-import vShaderSource from './shaders/v.glsl';
-import fShaderSource from './shaders/f.glsl';
-
 import { throttle } from 'throttle-debounce';
-import * from 'fullscreen-api-polyfill';
+import hexToRgba from 'hex-to-rgba';
 import * as dat from 'dat.gui';
 
+import vShaderSource from './shaders/v.glsl';
+import fShaderSource from './shaders/f.glsl';
+import Vector from '../src/scripts/Vector';
 import { createShader, createProgram } from './scripts/webGlUtils';
-import { hexToGlColor } from './scripts/utils';
-import { makePerspective } from './scripts/affine';
-import matMulMat4 from './scripts/math/matMulMat4';
-import TMatrix from './scripts/TMatrix';
 
-import FGeometry from './geometries/FGeometry/FGeometry';
-import GlGeometry from './geometries/GlGeometry';
-import FpsCorrection from './scripts/FpsCorrection';
-import CubeGeometry from './geometries/CubeGeometry/CubeGeometry';
+import { makeIdentity, makeTranslation, makeScale, makeShear, makeRotateX, makeRotateY, makeRotateZ, makeReflect, makeProjection, makeZToWMatrix, makePerspective } from './affine';
+import f from './geometries/f';
+import matMulMat4 from './scripts/math/matMulMat4';
 
 const $: {
     canvas?: HTMLCanvasElement,
@@ -27,7 +22,43 @@ const $: {
 $.root = document.querySelector('.app');
 $.canvas = $.root.querySelector('.app__canvas');
 
+const screenSize = new Vector(0, 0);
+const canvasSize = new Vector(0, 0);
+
 const gl = $.canvas.getContext('webgl');
+const gui = new dat.GUI();
+
+const options = {
+    color: "#0f0",
+    fieldOfView: Math.PI / 3,
+    linesOnly: true,
+
+    translateX: 0,
+    translateY: 100,
+    translateZ: -500,
+
+    rotateX: -0.25,
+    rotateY: 0.1,
+    rotateZ: Math.PI,
+
+    scaleX: 1,
+    scaleY: 1,
+    scaleZ: 1,
+
+    shearXY: 0,
+    shearYX: 0,
+    shearXZ: 0,
+    shearZX: 0,
+    shearYZ: 0,
+    shearZY: 0,
+
+    reflectX: false,
+    reflectY: false,
+    reflectZ: false,
+}
+
+let affine = makeIdentity();
+
 const vShader = createShader(gl, gl.VERTEX_SHADER, vShaderSource);
 const fShader = createShader(gl, gl.FRAGMENT_SHADER, fShaderSource);
 const program = createProgram(gl, vShader, fShader);
@@ -35,336 +66,33 @@ const program = createProgram(gl, vShader, fShader);
 const loc = {
     aPosition: gl.getAttribLocation(program, 'a_position'),
     aColor: gl.getAttribLocation(program, 'a_color'),
-
-    tMatrix: gl.getUniformLocation(program, 'tMatrix'),
+    affine: gl.getUniformLocation(program, 'affine'),
     baseColor: gl.getUniformLocation(program, 'baseColor'),
     time: gl.getUniformLocation(program, 'time'),
 }
 
-const gui = new dat.GUI();
-const fpsCorrection = new FpsCorrection().start();
+const positionBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(f.vertices), gl.STATIC_DRAW);
 
-const worldRadius = 2500;
-
-const options = {
-    baseColor: "#888",
-    rotateSpeed: 0.01,
-
-    fieldOfView: Math.PI / 3,
-    far: worldRadius * 2 * 3,
-    near: 1,
-
-    activeGeometry: 'Geometry 1',
-    baseGlColor: null,
-
-    DEPTH_TEST: true,
-
-    toggleFullscreen: () => toggleFullscreen(),
-}
-
-const camera = {
-    translateX: 0,
-    translateY: -300,
-    translateZ: 3500,
-
-    rotateX: Math.PI / 9,
-    rotateY: 0,
-    rotateZ: 0,
-
-    minX: -Math.PI / 2.2,
-    maxX: Math.PI / 2.2,
-
-    speed: 10,
-    moveMode: 'keyboard',
-}
-
-const KEYS = {
-    forward: 87,
-    back: 83,
-    right: 68,
-    left: 65,
-    up: 32,
-    down: 16,
-};
-
-const pressedKeys: Map<string, boolean> = new Map();
-
-let screenW = 0;
-let screenH = 0;
-let canvasW = 0;
-let canvasH = 0;
-let ratio = 0;
-
-let curMovementX = 0;
-let curMovementY = 0;
-
-let time = 0;
-
-let viewMatrix: TMatrix;
-
-const geometries: GlGeometry[] = [];
-
-geometries.push(...[
-    [worldRadius, -500, worldRadius],
-    [worldRadius, -500, -worldRadius],
-    [-worldRadius, -500, worldRadius],
-    [-worldRadius, -500, -worldRadius],
-]
-    .map(coords => coords.map(c => c * 0.8))
-    .map(([x, y, z]) => {
-        const glGeometry = new GlGeometry(gl, new FGeometry());
-
-        glGeometry.options.translateX = x;
-        glGeometry.options.translateY = y;
-        glGeometry.options.translateZ = z;
-
-        return glGeometry;
-    })
-);
-
-geometries.push(...[
-    [worldRadius, -500, worldRadius],
-    [worldRadius, -500, -worldRadius],
-    [-worldRadius, -500, worldRadius],
-    [-worldRadius, -500, -worldRadius],
-]
-    .map(coords => coords.map(c => c * 0.8))
-    .map(([x, y, z]) => {
-        const glGeometry = new GlGeometry(gl, new FGeometry());
-
-        glGeometry.options.translateX = x;
-        glGeometry.options.translateY = y;
-        glGeometry.options.translateZ = z;
-
-        return glGeometry;
-    })
-);
-
-geometries.push(...new Array(512).fill(0)
-    .map((_, i, { length }) => {
-        const geometry = new FGeometry();
-        const glGeometry = new GlGeometry(gl, geometry);
-        const options = glGeometry.options;
-
-        const side = Math.cbrt(length) ^ 0;
-
-        const x = i % side;
-        const y = (i / (side ** 2)) ^ 0;
-        const z = ((i / side) ^ 0) % side;
-        const size = 300;
-
-        const offset = -(size * side) / 2;
-
-        options.translateX = offset + x * size;
-        options.translateY = -350 - y * size;
-        options.translateZ = -offset - z * size;
-
-        return glGeometry;
-    }));
-
-geometries.push(...new Array(125).fill(0)
-    .map((_, i, { length }) => {
-        const geometry = new CubeGeometry();
-        const glGeometry = new GlGeometry(gl, geometry);
-        const options = glGeometry.options;
-
-        const side = Math.cbrt(length) ^ 0;
-
-        const x = i % side;
-        const y = (i / (side ** 2)) ^ 0;
-        const z = ((i / side) ^ 0) % side;
-        const size = 150;
-
-        options.translateX = 3500 + x * size;
-        options.translateY = -350 - y * size;
-        options.translateZ = -3500 - z * size;
-
-        return glGeometry;
-    }));
-
-(function () {
-    const ground = new CubeGeometry();
-    const glGeometry = new GlGeometry(gl, ground);
-    const { options } = glGeometry;
-
-    const side = worldRadius * 2 * 5;
-    const size = 50;
-
-    options.translateX = -side;
-    options.translateY = 0;
-    options.translateZ = -side;
-
-    options.scaleY = 0.25;
-    options.scaleX = side / size;
-    options.scaleZ = side / size;
-
-    options.autoRotate = false;
-
-    geometries.push(glGeometry);
-}());
-
-options.baseGlColor = hexToGlColor(options.baseColor);
+const colorBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array(f.colors), gl.STATIC_DRAW);
 
 initEvents();
 resize();
-initGui();
+updateAffine();
 start();
+initGui();
 
-function drawFrame() {
-    const { DEPTH_TEST, rotateSpeed, baseGlColor } = options;
+function initEvents() {
+    window.addEventListener('resize', throttle(50, () => {
+        resize();
+    }));
 
-    gl.clearColor(0, 0, 0, 0);
-
-    if (DEPTH_TEST) {
-        gl.clear(gl.COLOR_BUFFER_BIT || gl.DEPTH_BUFFER_BIT);
-        gl.enable(gl.DEPTH_TEST);
-    } else {
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.disable(gl.DEPTH_TEST);
-    }
-
-    gl.useProgram(program);
-
-
-    update();
-
-    ((DEPTH_TEST) ? geometries : geometries.slice().reverse()).forEach((glGeometry) => {
-        const { verticesBuffer, colorsBuffer, geometry, options: gOptions } = glGeometry;
-
-        if (gOptions.autoRotate) {
-            gOptions.rotateY += rotateSpeed * fpsCorrection.val;
-        }
-
-        updateTMatrix(glGeometry);
-
-        gl.enableVertexAttribArray(loc.aPosition);
-        gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer);
-        gl.vertexAttribPointer(loc.aPosition, 3, gl.FLOAT, false, 0, 0);
-
-        gl.enableVertexAttribArray(loc.aColor);
-        gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
-        gl.vertexAttribPointer(loc.aColor, 3, gl.UNSIGNED_BYTE, true, 0, 0);
-
-        gl.uniformMatrix4fv(loc.tMatrix, false, geometry.tMatrix.matrix);
-        gl.uniform1f(loc.time, time);
-
-        let { r, g, b } = baseGlColor;
-        gl.uniform4f(loc.baseColor, r, g, b, 1);
-
-        gl.drawArrays(gl.TRIANGLES, 0, geometry.primitiveCount);
+    window.addEventListener('load', () => {
+        resize();
     });
-}
-
-function update() {
-    time++;
-
-    fpsCorrection.update();
-    updateCamera();
-    updateViewMatrix();
-}
-
-function updateCamera() {
-    updateCameraAngle();
-
-    if (camera.moveMode === 'auto') {
-        updateCameraCoordsAuto();
-    } else {
-        updateCameraCoordsByKeyboard();
-    }
-}
-
-function updateCameraAngle() {
-    const { minX, maxX } = camera;
-
-    camera.rotateY += curMovementX / 500;
-    camera.rotateX -= curMovementY / 500;
-
-    camera.rotateX = Math.min(Math.max(camera.rotateX, minX), maxX);
-
-    curMovementX = 0;
-    curMovementY = 0;
-}
-
-function updateCameraCoordsAuto() {
-    const { speed, rotateX, rotateY } = camera;
-    const d = speed * fpsCorrection.val;
-
-    camera.translateZ -= d * Math.cos(rotateY);
-    camera.translateY -= d * Math.sin(rotateX);
-    camera.translateX += d * Math.sin(rotateY);
-}
-
-function updateCameraCoordsByKeyboard() {
-    const { speed } = camera;
-    const normalAngle = Math.PI / 2;
-    const d = speed * fpsCorrection.val;
-
-    let rotateX = 0;
-    if (pressedKeys[KEYS.up]) rotateX += normalAngle;
-    if (pressedKeys[KEYS.down]) rotateX -= normalAngle;
-    camera.translateY -= d * Math.sin(rotateX);
-
-    let y = 0;
-    let z = 0;
-
-    if (pressedKeys[KEYS.forward]) z++;
-    if (pressedKeys[KEYS.back]) z--;
-
-    if (pressedKeys[KEYS.left]) y--;
-    if (pressedKeys[KEYS.right]) y++;
-
-    if (y === 0 && z === 0) return;
-    const rotateY = Math.atan2(y, z);
-
-    const dx = d * Math.sin(rotateY);
-    const dz = d * Math.cos(rotateY);
-
-    camera.translateX += dx * Math.cos(-camera.rotateY) - dz * Math.sin(-camera.rotateY);
-    camera.translateZ -= dx * Math.sin(-camera.rotateY) + dz * Math.cos(-camera.rotateY);
-}
-
-function updateViewMatrix() {
-    const { fieldOfView, near, far } = options;
-    const { translateX, translateY, translateZ, rotateX, rotateY, rotateZ } = camera;
-
-    viewMatrix = new TMatrix()
-        .translate(translateX, translateY, translateZ)
-        .rotateY(rotateY)
-        .rotateX(rotateX)
-        .rotateZ(rotateZ)
-        .inverse();
-
-    viewMatrix.setTMatrix(matMulMat4(
-        viewMatrix.matrix,
-        makePerspective(fieldOfView, ratio, near, far)
-    ));
-}
-
-function updateTMatrix(glGeometry: GlGeometry) {
-    const { geometry, options } = glGeometry;
-
-    const tMatrix = geometry.tMatrix;
-
-    const {
-        reflectX, reflectY, reflectZ,
-        rotateX, rotateY, rotateZ,
-        scaleX, scaleY, scaleZ,
-        shearXY, shearXZ, shearYX, shearYZ, shearZX, shearZY,
-        translateX, translateY, translateZ,
-    } = options;
-
-    const { centerX, centerY, centerZ } = geometry;
-
-    tMatrix.reset(viewMatrix.matrix)
-        .translate(translateX, translateY, translateZ)
-        .translate(centerX * scaleX, centerY * scaleY, centerZ * scaleZ)
-        .rotateY(rotateY)
-        .rotateX(rotateX)
-        .rotateZ(rotateZ)
-        .reflect(reflectX, reflectY, reflectZ)
-        .scale(scaleX, scaleY, scaleZ)
-        .translate(-centerX, -centerY, -centerZ)
-        .shear(shearXY, shearYX, shearXZ, shearZX, shearYZ, shearZY)
 }
 
 function start() {
@@ -374,40 +102,31 @@ function start() {
     });
 }
 
-function initEvents() {
-    window.addEventListener('resize', throttle(1000, () => {
-        resize();
-    }));
+function drawFrame() {
+    const color = getColor();
 
-    window.addEventListener('load', () => {
-        resize();
-    });
+    affine = rotateY(affine, 0.01);
 
-    $.canvas.addEventListener('mousedown', () => {
-        lockPointer();
-    });
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.enable(gl.DEPTH_TEST);
 
-    $.canvas.addEventListener('mousemove', ({ movementX, movementY }) => {
-        if (document.pointerLockElement !== $.canvas) return;
-        curMovementX += movementX;
-        curMovementY += movementY;
-    });
+    gl.useProgram(program);
 
-    document.addEventListener('pointerlockchange', () => {
-        if (document.pointerLockElement === $.canvas) {
-            $.root.classList.add('app--pointer-lock');
-        } else {
-            $.root.classList.remove('app--pointer-lock');
-        }
-    });
+    gl.enableVertexAttribArray(loc.aPosition);
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.vertexAttribPointer(loc.aPosition, 3, gl.FLOAT, false, 0, 0);
 
-    $.canvas.addEventListener('keydown', ({ keyCode }) => {
-        return pressedKeys[keyCode] = true
-    });
+    gl.enableVertexAttribArray(loc.aColor);
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.vertexAttribPointer(loc.aColor, 3, gl.UNSIGNED_BYTE, true, 0, 0);
 
-    $.canvas.addEventListener('keyup', ({ keyCode }) => {
-        return pressedKeys[keyCode] = false;
-    });
+    gl.uniformMatrix4fv(loc.affine, false, affine);
+    gl.uniform1f(loc.time, performance.now() / 1000);
+    gl.uniform4f(loc.baseColor, color.r, color.g, color.b, color.a);
+
+    const primitives = (!options.linesOnly) ? gl.TRIANGLES : gl.LINES;
+    gl.drawArrays(primitives, 0, f.vertices.length / 3);
 }
 
 function resize() {
@@ -415,143 +134,138 @@ function resize() {
     updateCanvasSize();
 }
 
-function toggleFullscreen() {
-    if (document.fullscreenElement !== $.root) {
-        startFullscreen();
-        return;
-    }
-
-    exitFullscreen()
-}
-
-function exitFullscreen() {
-    if (document.fullscreenElement !== $.root) {
-        return;
-    }
-
-    document.exitFullscreen();
-}
-
-function startFullscreen() {
-    if (document.fullscreenElement === $.root) {
-        return;
-    }
-
-    try {
-        document.body.requestFullscreen();
-    } catch { };
-}
-
-function lockPointer() {
-    if (document.pointerLockElement === $.canvas) return;
-    $.canvas.requestPointerLock();
-}
-
 function updateCanvasSize() {
-    $.canvas.width = canvasW;
-    $.canvas.height = canvasH;
+    $.canvas.width = canvasSize.x;
+    $.canvas.height = canvasSize.y;
 
-    gl.viewport(0, 0, canvasW, canvasH);
+    gl.viewport(0, 0, canvasSize.x, canvasSize.y);
 }
 
 function updateMetrics() {
-    screenW = $.canvas.clientWidth;
-    screenH = $.canvas.clientHeight;
+    screenSize.x = $.root.offsetWidth;
+    screenSize.y = $.root.offsetHeight;
 
-    canvasW = Math.floor(screenW * window.devicePixelRatio);
-    canvasH = Math.floor(screenH * window.devicePixelRatio);
-
-    ratio = canvasW / canvasH;
+    canvasSize.x = Math.floor(screenSize.x * window.devicePixelRatio);
+    canvasSize.y = Math.floor(screenSize.y * window.devicePixelRatio);
 }
 
-function getActiveGeometryOptions() {
-    const index = +options.activeGeometry.replace(/\D+/g, '') - 1;
-    return geometries[index];
+async function loadImages(sources: string[]) {
+    const images = [];
+    const promises = sources.map(async (src) => {
+        images.push(await loadImg(src));
+    });
+
+    await Promise.all(promises);
+    return images;
+}
+
+function loadImg(src: string) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+
+        img.src = src;
+    });
+}
+
+function getColor() {
+    const [r, g, b, a] = hexToRgba(options.color).split(', ')
+        .map(c => c.replace(/\D+/g, ''))
+        .map(c => +c / 255);
+
+    return { r, g, b, a };
+}
+
+function updateAffine() {
+    const {
+        reflectX, reflectY, reflectZ,
+        scaleX, scaleY, scaleZ,
+        shearXY, shearXZ, shearYX, shearYZ, shearZX, shearZY,
+        translateX, translateY, translateZ,
+    } = options;
+
+    const ratio = canvasSize.x / canvasSize.y;
+
+    affine = makeIdentity();
+    affine = perspective(affine, options.fieldOfView, ratio, 1, 2000);
+    affine = translate(affine, translateX, translateY, translateZ);
+    affine = rotateX(affine, options.rotateX);
+    affine = rotateY(affine, options.rotateY);
+    affine = rotateZ(affine, options.rotateZ);
+    affine = reflect(affine, reflectX, reflectY, reflectZ);
+    affine = scale(affine, scaleX, scaleY, scaleZ);
+    affine = shear(affine, shearXY, shearYX, shearXZ, shearZX, shearYZ, shearZY);
+}
+
+function translate(affine: number[], dx: number, dy: number, dz: number) {
+    return matMulMat4(makeTranslation(dx, dy, dz), affine);
+}
+
+function scale(affine: number[], cx: number, cy: number, cz: number) {
+    return matMulMat4(makeScale(cx, cy, cz), affine);
+}
+
+function shear(affine: number[], xy: number, yx: number, xz: number, zx: number, yz: number, zy: number) {
+    return matMulMat4(makeShear(xy, yx, xz, xz, yz, zy), affine);
+}
+
+function rotateX(affine: number[], deg: number) {
+    return matMulMat4(makeRotateX(deg), affine);
+}
+
+function rotateY(affine: number[], deg: number) {
+    return matMulMat4(makeRotateY(deg), affine);
+}
+
+function rotateZ(affine: number[], deg: number) {
+    return matMulMat4(makeRotateZ(deg), affine);
+}
+
+function reflect(affine: number[], cx: boolean, cy: boolean, cz: boolean) {
+    return matMulMat4(makeReflect(cx, cy, cz), affine);
+}
+
+function perspective(affine: number[], fieldOfView: number, aspect: number, near: number, far: number) {
+    return matMulMat4(makePerspective(fieldOfView, aspect, near, far), affine);
 }
 
 function initGui() {
-    gui.domElement.classList.add('gui-root');
-
     const baseOptions = gui.addFolder('Base Options');
-    const cameraFolder = gui.addFolder('Camera');
-    const geometryFolder = gui.addFolder(`Geometry`);
-
+    baseOptions.addColor(options, 'color');
+    baseOptions.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01).onChange(updateAffine);
+    baseOptions.add(options, 'linesOnly');
     baseOptions.open();
-    cameraFolder.open();
-    geometryFolder.open();
 
-    baseOptions.addColor(options, 'baseColor').onChange(() => {
-        options.baseGlColor = hexToGlColor(options.baseColor);
-    });
-
-    baseOptions.add(options, 'toggleFullscreen');
-
-    baseOptions.add(options, 'rotateSpeed', -0.1, 0.1, 0.001);
-    baseOptions.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01);
-
-    cameraFolder.add(camera, 'speed', -25, 25);
-    cameraFolder.add(camera, 'moveMode', ['keyboard', 'auto']);
-
-    const tCameraFolder = cameraFolder.addFolder('Manual Transformations');
-    tCameraFolder.add(camera, 'translateX', -worldRadius, worldRadius);
-    tCameraFolder.add(camera, 'translateY', -worldRadius, worldRadius);
-    tCameraFolder.add(camera, 'translateZ', -worldRadius, worldRadius);
-
-    tCameraFolder.add(camera, 'rotateX', -Math.PI, Math.PI, 0.05);
-    tCameraFolder.add(camera, 'rotateY', -Math.PI, Math.PI, 0.05);
-    tCameraFolder.add(camera, 'rotateZ', -Math.PI, Math.PI, 0.05);
-
-    const other = gui.addFolder('Other');
-    other.add(options, 'DEPTH_TEST');
-
-    initGeometryGui(geometryFolder);
-
-}
-
-function initGeometryGui(geometryFolder: dat.GUI) {
-    const { options: gOptions } = getActiveGeometryOptions();
-
-    geometryFolder.add(options, 'activeGeometry', geometries.map((_, i) => `Geometry ${i + 1}`)).onChange(() => {
-        for (let key in geometryFolder.__folders) {
-            geometryFolder.removeFolder(geometryFolder.__folders[key]);
-        }
-
-        for (let key in geometryFolder.__controllers) {
-            geometryFolder.__controllers[key].remove();
-        }
-
-        initGeometryGui(geometryFolder);
-    });
-
-    const translate = geometryFolder.addFolder('Translate');
-    translate.add(gOptions, 'translateX', -worldRadius * 0.8, worldRadius * 0.8);
-    translate.add(gOptions, 'translateY', -worldRadius * 0.8, worldRadius * 0.8);
-    translate.add(gOptions, 'translateZ', -worldRadius * 0.8, worldRadius * 0.8);
+    const translate = gui.addFolder('Translate');
+    translate.add(options, 'translateX', -500, 500, 1).onChange(updateAffine);
+    translate.add(options, 'translateY', -500, 500, 1).onChange(updateAffine);
+    translate.add(options, 'translateZ', -1000, 1, 1).onChange(updateAffine);
     translate.open();
 
-    const rotate = geometryFolder.addFolder('Rotate');
-    rotate.add(gOptions, 'autoRotate');
-    rotate.add(gOptions, 'rotateX', -Math.PI, Math.PI, 0.05);
-    rotate.add(gOptions, 'rotateY', -Math.PI, Math.PI, 0.05);
-    rotate.add(gOptions, 'rotateZ', -Math.PI, Math.PI, 0.05);
+    const rotate = gui.addFolder('Rotate');
+    rotate.add(options, 'rotateX', -Math.PI, Math.PI, 0.05).onChange(updateAffine);
+    rotate.add(options, 'rotateY', -Math.PI, Math.PI, 0.05).onChange(updateAffine);
+    rotate.add(options, 'rotateZ', -Math.PI, Math.PI, 0.05).onChange(updateAffine);
     rotate.open();
 
-    const scale = geometryFolder.addFolder('Scale');
-    scale.add(gOptions, 'scaleX', 0.1, 6, 0.1);
-    scale.add(gOptions, 'scaleY', 0.1, 6, 0.1);
-    scale.add(gOptions, 'scaleZ', 0.1, 6, 0.1);
+    const scale = gui.addFolder('Scale');
+    scale.add(options, 'scaleX', 0, 5, 0.1).onChange(updateAffine);
+    scale.add(options, 'scaleY', 0, 5, 0.1).onChange(updateAffine);
+    scale.add(options, 'scaleZ', 0, 5, 0.1).onChange(updateAffine);
     scale.open();
 
-    const shear = geometryFolder.addFolder('Shear');
-    shear.add(gOptions, 'shearXY', -2, 2, 0.05);
-    shear.add(gOptions, 'shearYX', -2, 2, 0.05);
-    shear.add(gOptions, 'shearXZ', -2, 2, 0.05);
-    shear.add(gOptions, 'shearZX', -2, 2, 0.05);
-    shear.add(gOptions, 'shearYZ', -2, 2, 0.05);
-    shear.add(gOptions, 'shearZY', -2, 2, 0.05);
+    const shear = gui.addFolder('Shear');
+    shear.add(options, 'shearXY', -3, 3, 0.1).onChange(updateAffine);
+    shear.add(options, 'shearYX', -3, 3, 0.1).onChange(updateAffine);
+    shear.add(options, 'shearXZ', -3, 3, 0.1).onChange(updateAffine);
+    shear.add(options, 'shearZX', -3, 3, 0.1).onChange(updateAffine);
+    shear.add(options, 'shearYZ', -3, 3, 0.1).onChange(updateAffine);
+    shear.add(options, 'shearZY', -3, 3, 0.1).onChange(updateAffine);
 
-    const reflect = geometryFolder.addFolder('Reflect');
-    reflect.add(gOptions, 'reflectX');
-    reflect.add(gOptions, 'reflectY');
-    reflect.add(gOptions, 'reflectZ');
+    const reflect = gui.addFolder('Reflect');
+    reflect.add(options, 'reflectX').onChange(updateAffine);
+    reflect.add(options, 'reflectY').onChange(updateAffine);
+    reflect.add(options, 'reflectZ').onChange(updateAffine);
 }

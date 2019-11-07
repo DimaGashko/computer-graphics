@@ -47,7 +47,7 @@ const fpsCorrection = new FpsCorrection().start();
 const worldRadius = 2500;
 
 const options = {
-    baseColor: '#f9ff00',
+    baseColor: "#888",
     rotateSpeed: 0.01,
 
     fieldOfView: Math.PI / 3,
@@ -58,8 +58,6 @@ const options = {
     baseGlColor: null,
 
     DEPTH_TEST: true,
-
-    primitives: 'TRIANGLES',
 
     toggleFullscreen: () => toggleFullscreen(),
 }
@@ -214,31 +212,19 @@ start();
 
 function drawFrame() {
     const { DEPTH_TEST, rotateSpeed, baseGlColor } = options;
-    const primitives = getPrimitives();
 
     gl.clearColor(0, 0, 0, 0);
 
     if (DEPTH_TEST) {
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        gl.enable(gl.CULL_FACE);
+        gl.clear(gl.COLOR_BUFFER_BIT || gl.DEPTH_BUFFER_BIT);
         gl.enable(gl.DEPTH_TEST);
     } else {
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.disable(gl.DEPTH_TEST);
     }
 
-    gl.cullFace(gl.FRONT);
-    // gl.clear(gl.COLOR_BUFFER_BIT);
-
-    // gl.enable(gl.BLEND);
-    // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
-    //gl.enable(gl.DEPTH_TEST);
-    //gl.depthFunc(gl)
-    //gl.depthMask(false);
-    
-
     gl.useProgram(program);
+
 
     update();
 
@@ -265,15 +251,8 @@ function drawFrame() {
         let { r, g, b } = baseGlColor;
         gl.uniform4f(loc.baseColor, r, g, b, 1);
 
-        gl.drawArrays(primitives, 0, geometry.primitiveCount);
+        gl.drawArrays(gl.TRIANGLES, 0, geometry.primitiveCount);
     });
-}
-
-function getPrimitives() { 
-    if (options.primitives === 'TRIANGLES') return gl.TRIANGLES;
-    else if (options.primitives === 'LINES') return gl.LINE_LOOP;
-
-    throw new Error('Unknown primitive type');
 }
 
 function update() {
@@ -437,15 +416,19 @@ function resize() {
 }
 
 function toggleFullscreen() {
-    if (!document.fullscreenElement) {
+    if (document.fullscreenElement !== $.root) {
         startFullscreen();
         return;
     }
 
-    exitFullscreen();
+    exitFullscreen()
 }
 
 function exitFullscreen() {
+    if (document.fullscreenElement !== $.root) {
+        return;
+    }
+
     document.exitFullscreen();
 }
 
@@ -502,11 +485,12 @@ function initGui() {
     });
 
     baseOptions.add(options, 'toggleFullscreen');
+
     baseOptions.add(options, 'rotateSpeed', -0.1, 0.1, 0.001);
+    baseOptions.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01);
 
     cameraFolder.add(camera, 'speed', -25, 25);
     cameraFolder.add(camera, 'moveMode', ['keyboard', 'auto']);
-    cameraFolder.add(options, 'fieldOfView', 0.3, Math.PI - 0.3, 0.01);
 
     const tCameraFolder = cameraFolder.addFolder('Manual Transformations');
     tCameraFolder.add(camera, 'translateX', -worldRadius, worldRadius);
@@ -518,10 +502,10 @@ function initGui() {
     tCameraFolder.add(camera, 'rotateZ', -Math.PI, Math.PI, 0.05);
 
     const other = gui.addFolder('Other');
-    other.add(options, 'primitives', ['TRIANGLES', 'LINES']);
     other.add(options, 'DEPTH_TEST');
 
     initGeometryGui(geometryFolder);
+
 }
 
 function initGeometryGui(geometryFolder: dat.GUI) {

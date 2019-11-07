@@ -4,8 +4,9 @@ html {
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-    color: #fff;
 
+    background: #212121;
+    color: #fff;
 
     min-height: 100vh;
 }
@@ -22,39 +23,6 @@ body {
 
     max-width: 100vw;
     overflow: hidden;
-
-    background: var(--bg-color);
-    background: linear-gradient(to top, #010A10 45%, #59230B 80%, #2F1107 100%);
-
-    &:after {
-        content: '';
-
-        position: absolute;
-        top: 50%;
-        left: 50%;
-
-        transform: translate(-50%, -50%);
-
-        width: 24px;
-        height: 24px;
-
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-
-        background-image: url("data:image/svg+xml,%0A%3Csvg xmlns='http://www.w3.org/2000/svg' x='0px' y='0px' viewBox='0 0 512 512' style='enable-background:new 0 0 512 512;' xml:space='preserve' width='512' height='512'%3E%3ClinearGradient id='SVGID_1_' gradientUnits='userSpaceOnUse' x1='0' y1='256' x2='512' y2='256'%3E%3Cstop offset='0' style='stop-color:%2300F2FE'/%3E%3Cstop offset='0.0208' style='stop-color:%2303EFFE'/%3E%3Cstop offset='0.2931' style='stop-color:%2324D2FE'/%3E%3Cstop offset='0.5538' style='stop-color:%233CBDFE'/%3E%3Cstop offset='0.7956' style='stop-color:%234AB0FE'/%3E%3Cstop offset='1' style='stop-color:%234FACFE'/%3E%3C/linearGradient%3E%3Cpath style='fill:url(%23SVGID_1_);' d='M256,512c-11.046,0-20-8.954-20-20V327c0-11.046,8.954-20,20-20s20,8.954,20,20v165 C276,503.046,267.046,512,256,512z M276,185V20c0-11.046-8.954-20-20-20s-20,8.954-20,20v165c0,11.046,8.954,20,20,20 S276,196.046,276,185z M512,256c0-11.046-8.954-20-20-20H326c-11.046,0-20,8.954-20,20s8.954,20,20,20h166 C503.046,276,512,267.046,512,256z M205,256c0-11.046-8.954-20-20-20H20c-11.046,0-20,8.954-20,20s8.954,20,20,20h165 C196.046,276,205,267.046,205,256z M256,276c11.046,0,20-8.954,20-20c0-11.046-8.954-20-20-20c-11.046,0-20,8.954-20,20 C236,267.046,244.954,276,256,276z'/%3E%3C/svg%3E%0A");
-        background-size: contain;
-
-        transition: opacity .3s, visibility .3s;
-    }
-
-    &--pointer-lock {
-        &:after {
-            opacity: 1;
-            visibility: visible;
-            pointer-events: initial;
-        }
-    }
 }
 
 .app__canvas {
@@ -62,23 +30,10 @@ body {
     left: 0;
     top: 0;
 
-    width: 100%;
-    height: 100%;
-
     opacity: 0.9;
     outline: none;
 
     &:focus {
         opacity: 1;
-    }
-}
-
-.app__controls {
-    --controls-padding: 10px;
-}
-
-.gui-root {
-    select {
-        color: #333;
     }
 }
