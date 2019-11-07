@@ -1,6 +1,8 @@
 import 'normalize.scss/normalize.scss';
 import './index.scss';
 
+import imgSrc from './assets/img.png';
+
 import vShaderSource from './shaders/v.glsl';
 import fShaderSource from './shaders/f.glsl';
 
@@ -34,11 +36,13 @@ const program = createProgram(gl, vShader, fShader);
 
 const loc = {
     aPosition: gl.getAttribLocation(program, 'a_position'),
+    aTexcoords: gl.getAttribLocation(program, "a_texcoords"),
     aColor: gl.getAttribLocation(program, 'a_color'),
 
     tMatrix: gl.getUniformLocation(program, 'tMatrix'),
     baseColor: gl.getUniformLocation(program, 'baseColor'),
     time: gl.getUniformLocation(program, 'time'),
+    tex: gl.getUniformLocation(program, 'texture'),
 }
 
 const gui = new dat.GUI();
@@ -105,6 +109,34 @@ let time = 0;
 let viewMatrix: TMatrix;
 
 const geometries: GlGeometry[] = [];
+
+const texture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, texture);
+
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+    new Uint8Array([
+        255, 0, 0, 255,
+        0, 150, 0, 255,
+        0, 150, 0, 255,
+        0, 150, 0, 255,
+        0, 150, 0, 255,
+        0, 150, 0, 255,
+        0, 150, 0, 255,
+        0, 150, 0, 255,
+        0, 150, 0, 255,
+        0, 150, 0, 255,
+        0, 150, 0, 255,
+        0, 150, 0, 255,
+        0, 150, 0, 255,
+        0, 150, 0, 255,
+        0, 150, 0, 255,
+        255, 0, 0, 255
+    ]));
+
+const texcoordsBuf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, texcoordsBuf);
+const data = " 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0,".repeat(1000).split(',').map(n => +n);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([...data]), gl.STATIC_DRAW);
 
 geometries.push(...[
     [worldRadius, -500, worldRadius],
@@ -207,10 +239,18 @@ geometries.push(...new Array(125).fill(0)
 
 options.baseGlColor = hexToGlColor(options.baseColor);
 
-initEvents();
-resize();
-initGui();
-start();
+loadImg(imgSrc).then((img) => {
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    gl.generateMipmap(gl.TEXTURE_2D);
+
+
+    initEvents();
+    resize();
+    initGui();
+    start();
+});
+
 
 function drawFrame() {
     const { DEPTH_TEST, rotateSpeed, baseGlColor } = options;
@@ -236,7 +276,6 @@ function drawFrame() {
     //gl.enable(gl.DEPTH_TEST);
     //gl.depthFunc(gl)
     //gl.depthMask(false);
-    
 
     gl.useProgram(program);
 
@@ -255,11 +294,16 @@ function drawFrame() {
         gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer);
         gl.vertexAttribPointer(loc.aPosition, 3, gl.FLOAT, false, 0, 0);
 
-        gl.enableVertexAttribArray(loc.aColor);
-        gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
-        gl.vertexAttribPointer(loc.aColor, 3, gl.UNSIGNED_BYTE, true, 0, 0);
+        // gl.enableVertexAttribArray(loc.aColor);
+        // gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
+        // gl.vertexAttribPointer(loc.aColor, 3, gl.UNSIGNED_BYTE, true, 0, 0);
+
+        gl.enableVertexAttribArray(loc.aTexcoords);
+        gl.bindBuffer(gl.ARRAY_BUFFER, texcoordsBuf);
+        gl.vertexAttribPointer(loc.aTexcoords, 2, gl.FLOAT, false, 0, 0);
 
         gl.uniformMatrix4fv(loc.tMatrix, false, geometry.tMatrix.matrix);
+        gl.uniform1i(loc.tex, 0);
         gl.uniform1f(loc.time, time);
 
         let { r, g, b } = baseGlColor;
@@ -269,7 +313,9 @@ function drawFrame() {
     });
 }
 
-function getPrimitives() { 
+
+
+function getPrimitives() {
     if (options.primitives === 'TRIANGLES') return gl.TRIANGLES;
     else if (options.primitives === 'LINES') return gl.LINE_LOOP;
 
@@ -484,6 +530,17 @@ function updateMetrics() {
 function getActiveGeometryOptions() {
     const index = +options.activeGeometry.replace(/\D+/g, '') - 1;
     return geometries[index];
+}
+
+function loadImg(src: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+
+        img.src = src;
+    });
 }
 
 function initGui() {
