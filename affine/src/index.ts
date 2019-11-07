@@ -101,6 +101,8 @@ let boundingBox = [
     new Vector(-Infinity, -Infinity),
 ];
 
+let starts: Vector[] = [];
+
 (<any>window).set = (m: number[][]) => {
     tMatrix = m;
 }
@@ -229,7 +231,7 @@ function draw() {
     const z = options.worldZoom;
 
     if (options.fill) {
-        fill(textPixels.map(c => c[0].add(new Vector(z * 2, z * 2))));
+        fillRecursive(starts);
     }
 
     if (options.boundingBox) drawBoundingBox();
@@ -259,6 +261,11 @@ function drawLetterSpace() {
 }
 
 function getPixelsOfCharacter(char: Char) {
+    const z = options.worldZoom;
+
+    const firstInside = new Vector(char[0][0], char[0][1]).add(new Vector(z, z));
+    starts.push(toView(transformPoint(firstInside)));
+
     return char.map(transformLine).map(([x1, y1, x2, y2]) => {
         const a = toView(new Vector(x1, y1));
         const b = toView(new Vector(x2, y2));
@@ -380,7 +387,7 @@ function drawBoundingBox() {
     ctx.restore();
 }
 
-function fill(starts: Vector[]) {
+function fillRecursive(starts: Vector[]) {
     const d = ctx.getImageData(0, 0, screenSize.x, screenSize.y);
     const stack = starts.map(({ x, y }) => [x, y]);
     const { r, g, b } = hexToRawColor(options.fillColor);
@@ -389,7 +396,7 @@ function fill(starts: Vector[]) {
         const [x, y] = stack.pop();
 
         if (x < 0 || y < 0 || x > screenSize.x || y > screenSize.y) continue;
-
+        
         if (getPixel(d, x, y)[3] === 255) {
             continue;
         }
@@ -595,6 +602,8 @@ function clear() {
         new Vector(Infinity, Infinity),
         new Vector(-Infinity, -Infinity),
     ];
+
+    starts = [];
 }
 
 function font2CharMap(font: Font) {
