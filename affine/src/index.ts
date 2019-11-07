@@ -224,8 +224,6 @@ function draw() {
         }
     }
 
-    drawAllGrids();
-
     textPixels.forEach(c => c.map((p) => drawPixel(p)));
 
     const z = options.worldZoom;
@@ -233,6 +231,8 @@ function draw() {
     if (options.fill) {
         fillRecursive(starts);
     }
+
+    drawAllGrids();
 
     if (options.boundingBox) drawBoundingBox();
 
@@ -262,8 +262,7 @@ function drawLetterSpace() {
 
 function getPixelsOfCharacter(char: Char) {
     const z = options.worldZoom;
-
-    const firstInside = new Vector(char[0][0], char[0][1]).add(new Vector(z, z));
+    const firstInside = new Vector(char[0][0], char[0][1]).add(new Vector(z / 2 + 1, z + 1));
     starts.push(toView(transformPoint(firstInside)));
 
     return char.map(transformLine).map(([x1, y1, x2, y2]) => {
@@ -287,7 +286,7 @@ function getPixelsOfCharacter(char: Char) {
 }
 
 function getLinePixels(x1: number, y1: number, x2: number, y2: number): Vector[] {
-    const z = options.worldZoom;
+    const z = Math.max((options.worldZoom / 2) ^ 0, 1);
     const pixels = [];
 
     const incX = Math.sign(x2 - x1) * z;
@@ -396,8 +395,8 @@ function fillRecursive(starts: Vector[]) {
         const [x, y] = stack.pop();
 
         if (x < 0 || y < 0 || x > screenSize.x || y > screenSize.y) continue;
-        
-        if (getPixel(d, x, y)[3] === 255) {
+
+        if (getPixel(d, x, y)[3] !== 0) {
             continue;
         }
 
