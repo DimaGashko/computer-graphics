@@ -513,11 +513,15 @@ function getActiveGeometryOptions() {
     const index = +options.activeGeometry.replace(/\D+/g, '') - 1;
     return geometries[index];
 }
-
+updateTexture
 function updateTexture() { 
     const texture = textures[options.texture];
     texture.load();
     gl.bindTexture(gl.TEXTURE_2D, texture.texture);
+
+    //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
 }
 
 function initGui() {
