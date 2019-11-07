@@ -1,7 +1,7 @@
 import 'normalize.scss/normalize.scss';
 import './index.scss';
 
-import imgSrc from './assets/floor.jpg';
+import imgSrc from './assets/outlines.png';
 
 import vShaderSource from './shaders/v.glsl';
 import fShaderSource from './shaders/f.glsl';
@@ -43,6 +43,8 @@ const loc = {
     baseColor: gl.getUniformLocation(program, 'baseColor'),
     time: gl.getUniformLocation(program, 'time'),
     tex: gl.getUniformLocation(program, 'texture'),
+
+    useTexture: gl.getUniformLocation(program, 'useTexture'),
 }
 
 const gui = new dat.GUI();
@@ -62,7 +64,7 @@ const options = {
     baseGlColor: null,
 
     DEPTH_TEST: true,
-
+    useTexture: false,
     primitives: 'TRIANGLES',
 
     toggleFullscreen: () => toggleFullscreen(),
@@ -114,24 +116,7 @@ const texture = gl.createTexture();
 gl.bindTexture(gl.TEXTURE_2D, texture);
 
 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
-    new Uint8Array([
-        255, 0, 0, 255,
-        0, 150, 0, 255,
-        0, 150, 0, 255,
-        0, 150, 0, 255,
-        0, 150, 0, 255,
-        0, 150, 0, 255,
-        0, 150, 0, 255,
-        0, 150, 0, 255,
-        0, 150, 0, 255,
-        0, 150, 0, 255,
-        0, 150, 0, 255,
-        0, 150, 0, 255,
-        0, 150, 0, 255,
-        0, 150, 0, 255,
-        0, 150, 0, 255,
-        255, 0, 0, 255
-    ]));
+    new Uint8Array([255, 0, 0, 255]));
 
 const texcoordsBuf = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, texcoordsBuf);
@@ -268,16 +253,13 @@ function drawFrame() {
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.disable(gl.DEPTH_TEST);
     }
-
+    
     gl.cullFace(gl.FRONT);
-    // gl.clear(gl.COLOR_BUFFER_BIT);
 
-    // gl.enable(gl.BLEND);
-    // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
-    //gl.enable(gl.DEPTH_TEST);
-    //gl.depthFunc(gl)
-    //gl.depthMask(false);
+    if (options.useTexture) {
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    }
 
     gl.useProgram(program);
 
@@ -307,6 +289,7 @@ function drawFrame() {
         gl.uniformMatrix4fv(loc.tMatrix, false, geometry.tMatrix.matrix);
         gl.uniform1i(loc.tex, 0);
         gl.uniform1f(loc.time, time);
+        gl.uniform1f(loc.useTexture, options.useTexture ? 1 : 0);
 
         let { r, g, b } = baseGlColor;
         gl.uniform4f(loc.baseColor, r, g, b, 1);
@@ -576,6 +559,7 @@ function initGui() {
 
     const other = gui.addFolder('Other');
     other.add(options, 'primitives', ['TRIANGLES', 'LINES']);
+    other.add(options, 'useTexture');
     other.add(options, 'DEPTH_TEST');
 
     initGeometryGui(geometryFolder);
