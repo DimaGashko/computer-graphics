@@ -379,27 +379,22 @@ function drawBoundingBox() {
 
 function fill(starts: Vector[]) {
     const d = ctx.getImageData(0, 0, screenSize.x, screenSize.y);
+    const stack = starts.map(({ x, y }) => [x, y]);
 
-    let i = 0;
+    for (let i = 0; stack.length && i < 5e5; i++) {
+        const [x, y] = stack.pop();
 
-    starts.forEach(({ x, y }) => {
-        try {
-            runFillForPixel(d, x, y);
-        } catch { };
-    });
+        if (x < 0 || y < 0 || x > screenSize.x || y > screenSize.y) continue;
+        if (getPixel(d, x, y)[3] > 0) continue;
+        setPixel(d, x, y, [255, 0, 0, 255]);
+
+        stack.push([x + 1, y]);
+        stack.push([x - 1, y]);
+        stack.push([x, y + 1]);
+        stack.push([x, y - 1]);
+    }
 
     ctx.putImageData(d, 0, 0);
-}
-
-function runFillForPixel(d: ImageData, x: number, y: number) {
-    if (x < 0 || y < 0 || x > screenSize.x || y > screenSize.y) return;
-    if (getPixel(d, x, y)[3] > 0) return;
-    setPixel(d, x, y, [255, 0, 0, 255]);
-
-    runFillForPixel(d, x + 1, y);
-    runFillForPixel(d, x - 1, y);
-    runFillForPixel(d, x, y + 1);
-    runFillForPixel(d, x, y - 1);
 }
 
 function getPixel({ data, width }: ImageData, x: number, y: number) {
