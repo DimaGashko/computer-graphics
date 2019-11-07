@@ -2,6 +2,7 @@ import 'normalize.scss/normalize.scss';
 import './index.scss';
 
 import { throttle } from 'throttle-debounce';
+import hexToRgba = require("hex-to-rgba");
 import Hammer from 'hammerjs';
 import * as dat from 'dat.gui';
 
@@ -68,6 +69,7 @@ const options = {
     tCenterY: 0,
 
     fill: false,
+    fillColor: '#f00',
     border: false,
     box: false,
     boundingBox: false,
@@ -220,6 +222,8 @@ function draw() {
         }
     }
 
+    drawAllGrids();
+
     textPixels.forEach(c => c.map((p) => drawPixel(p)));
 
     const z = options.worldZoom;
@@ -228,7 +232,6 @@ function draw() {
         fill(textPixels.map(c => c[0].add(new Vector(z * 2, z * 2))));
     }
 
-    drawAllGrids();
     if (options.boundingBox) drawBoundingBox();
 
     clear();
@@ -380,13 +383,18 @@ function drawBoundingBox() {
 function fill(starts: Vector[]) {
     const d = ctx.getImageData(0, 0, screenSize.x, screenSize.y);
     const stack = starts.map(({ x, y }) => [x, y]);
+    const { r, g, b } = hexToRawColor(options.fillColor);
 
     for (let i = 0; stack.length && i < 5e5; i++) {
         const [x, y] = stack.pop();
 
         if (x < 0 || y < 0 || x > screenSize.x || y > screenSize.y) continue;
-        if (getPixel(d, x, y)[3] > 0) continue;
-        setPixel(d, x, y, [255, 0, 0, 255]);
+
+        if (getPixel(d, x, y)[3] === 255) {
+            continue;
+        }
+
+        setPixel(d, x, y, [r ,g, b, 255]);
 
         stack.push([x + 1, y]);
         stack.push([x - 1, y]);
@@ -599,6 +607,13 @@ function font2CharMap(font: Font) {
     return map;
 }
 
+function hexToRawColor(hex: string) {
+    const [r, g, b, a] = hexToRgba(hex).split(', ')
+        .map(c => +c.replace(/\D+/g, ''));
+
+    return { r, g, b, a: (a * 255) ^ 0 };
+}
+
 function initGui() {
     const setup = gui.addFolder('Setup');
     setup.addColor(options, 'color');
@@ -628,6 +643,7 @@ function initGui() {
     const other = gui.addFolder('Other');
     other.add(options, 'letterSpacing', 0.5, 2.5, 0.1);
     other.add(options, 'fill');
+    other.addColor(options, 'fillColor');
     other.add(options, 'border');
     other.add(options, 'box');
     other.add(options, 'boundingBox');

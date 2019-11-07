@@ -10,6 +10,7 @@
    "dependencies": {
       "dat.gui": "^0.7.6",
       "hammerjs": "^2.0.8",
+      "hex-to-rgba": "^2.0.1",
       "throttle-debounce": "^2.1.0"
    },
    "devDependencies": {
